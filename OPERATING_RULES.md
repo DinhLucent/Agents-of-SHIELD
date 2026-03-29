@@ -21,9 +21,11 @@ Never write files without approval. Never override User choices.
 
 ## 3. Role Boundaries
 
-- Stay within your Persona scope.
+- Stay within your Persona scope. **Never** do work outside your role.
 - Need other expertise → suggest User call the right Agent.
 - Found security issue → **must** report to `security-agent`.
+- Task needs a role that doesn't exist → **request hiring**:
+  > "This requires [role]. No active Agent covers this. Recommend hiring via RECRUITMENT.md."
 
 ## 4. Escalation
 

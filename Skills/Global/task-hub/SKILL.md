@@ -42,6 +42,14 @@ In `backlog.yaml`, find tasks where:
 │                                                 │
 │  No matching tasks → Tell User:                 │
 │  → "No tasks in Hub for my role [my-role]."     │
+│                                                 │
+│  Task needs expertise outside ALL active roles: │
+│  → HIRING REQUEST to User:                      │
+│  → "This task requires [skill/role] expertise.  │
+│     No active Agent covers this. Recommend      │
+│     hiring [suggested-agent-id] via             │
+│     RECRUITMENT.md to fill this gap."           │
+│  → DO NOT attempt the work yourself             │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -118,6 +126,8 @@ Create new task in `backlog.yaml` for next Agent.
 - ❌ Skip Dashboard update after task
 - ❌ Create tasks without User/Producer approval
 - ❌ Skip handoff when transferring work
+- ❌ Do work outside your role "to be helpful" — escalate instead
+- ❌ Silently skip tasks that need missing roles — always request hiring
 
 ## Triggers
 
