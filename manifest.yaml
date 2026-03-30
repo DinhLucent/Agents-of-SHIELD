@@ -27,6 +27,8 @@ agents:
       - "Skills/Roles/Architecture/architecture-decision"
       - "Skills/Roles/Architecture/map-systems"
       - "Skills/Roles/Architecture/reverse-document"
+      - ".skills_pool/claude-skills/engineering-team/tech-stack-evaluator"
+      - ".skills_pool/claude-skills/engineering-team/senior-architect"
 
   - id: "technical-director-agent"
     name: "Technical Director"
@@ -54,6 +56,8 @@ agents:
       - "Skills/Roles/Development/code-review"
       - "Skills/Roles/Development/db-review"
       - "Skills/Roles/Development/team-backend"
+      - ".skills_pool/claude-skills/engineering-team/senior-backend"
+      - ".skills_pool/claude-skills/engineering-team/tdd-guide"
 
   - id: "frontend-agent"
     name: "Frontend Developer"
@@ -72,6 +76,7 @@ agents:
       - "Skills/Roles/Development/code-review"
       - "Skills/Roles/Development/db-review"
       - "Skills/Roles/Development/team-feature"
+      - ".skills_pool/claude-skills/engineering-team/senior-fullstack"
 
   - id: "ui-programmer-agent"
     name: "UI Programmer"
@@ -113,6 +118,8 @@ agents:
       - "Skills/Roles/Quality/gate-check"
       - "Skills/Roles/Quality/release-checklist"
       - "Skills/Roles/Quality/launch-checklist"
+      - ".skills_pool/claude-skills/engineering-team/senior-qa"
+      - ".skills_pool/claude-skills/engineering-team/playwright-pro"
 
   - id: "qa-tester-agent"
     name: "QA Tester"
@@ -147,6 +154,8 @@ agents:
       - "Skills/Roles/Management/estimate"
       - "Skills/Roles/Management/retrospective"
       - "Skills/Roles/Management/team-release"
+      - ".skills_pool/claude-skills/project-management/senior-pm"
+      - ".skills_pool/claude-skills/project-management/scrum-master"
 
   - id: "release-manager-agent"
     name: "Release Manager"
@@ -173,6 +182,8 @@ agents:
       - "Skills/Roles/Specialist/Security/deep-scan"
       - "Skills/Roles/Specialist/Security/secret-audit"
       - "Skills/Roles/Specialist/Security/threat-model"
+      - ".skills_pool/claude-skills/engineering-team/senior-security"
+      - ".skills_pool/claude-skills/engineering-team/security-pen-testing"
 
   # ═══════════════════════════════════════════
   # SPECIALIST — DEVOPS
