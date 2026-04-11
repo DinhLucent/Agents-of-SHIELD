@@ -51,6 +51,10 @@ class RuntimeMetricsLogger:
         metrics.update({
             "task_id": task_id,
             "verifier_status": report.get("status", "unknown"),
+            "failed_check_count": len([
+                check for check in report.get("checks", [])
+                if check.get("result") == "failed"
+            ]),
             "updated_at": self._timestamp(),
         })
         self._store(task_id, metrics)
@@ -61,6 +65,50 @@ class RuntimeMetricsLogger:
             "updated_at": metrics["updated_at"],
         })
         return metrics
+
+    def record_execution(self, task_id: str, execution_result: dict[str, Any]) -> dict[str, Any]:
+        metrics = self._load(task_id)
+        metrics.update({
+            "task_id": task_id,
+            "last_execution_status": execution_result.get("status", "unknown"),
+            "execution_attempts": max(
+                int(metrics.get("execution_attempts", 0)),
+                int(execution_result.get("attempt", 0)),
+            ),
+            "last_changed_file_count": len(execution_result.get("changed_files", [])),
+            "last_command_count": sum(
+                len(step.get("commands", []))
+                for step in execution_result.get("step_results", [])
+            ),
+            "last_execution_report_path": execution_result.get("execution_report_path"),
+            "updated_at": self._timestamp(),
+        })
+        self._store(task_id, metrics)
+        self._append_event({
+            "event": "execution",
+            "task_id": task_id,
+            "attempt": execution_result.get("attempt", 0),
+            "execution_status": execution_result.get("status", "unknown"),
+            "changed_file_count": len(execution_result.get("changed_files", [])),
+            "updated_at": metrics["updated_at"],
+        })
+        return metrics
+
+    def record_state_transition(
+        self,
+        task_id: str,
+        status: str,
+        attempt: int,
+        current_step: str | None,
+    ) -> None:
+        self._append_event({
+            "event": "state_transition",
+            "task_id": task_id,
+            "status": status,
+            "attempt": attempt,
+            "current_step": current_step,
+            "updated_at": self._timestamp(),
+        })
 
     def record_retry(
         self,

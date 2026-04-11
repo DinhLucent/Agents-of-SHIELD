@@ -38,12 +38,15 @@ CLAUDE.md
 myidea
 refs_githubhọc
 
-# Control Plane — Runtime (ephemeral, not tracked)
+# Control Plane - Runtime (ephemeral, not tracked)
 runtime/state/
 runtime/cache/
 runtime/sessions/
 runtime/reports/
+.hub/active/*.json
+.hub/done/*.json
+.hub/handoffs/*.json
 
-# Control Plane — Compiled knowledge (regenerable via `python run_orchestrator.py compile`)
+# Control Plane - Compiled knowledge (regenerable via `python run_orchestrator.py compile`)
 knowledge/compiled/
 knowledge/memory/

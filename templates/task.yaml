@@ -31,3 +31,14 @@ acceptance_criteria:
 metadata:
   created_by: CEO
   created_at: "2026-04-11T10:00:00Z"
+  # Optional Phase 3 execution contract:
+  # execution:
+  #   primary_commands:
+  #     - "Set-Content -Path 'runtime/sessions/example.txt' -Value 'done' -Encoding utf8"
+  #   retry_commands:
+  #     - "Set-Content -Path 'runtime/sessions/example.txt' -Value 'retry-done' -Encoding utf8"
+  #   output_files:
+  #     - runtime/sessions/example.txt
+  #   satisfied_criteria:
+  #     - retry packet includes only targeted context
+  #     - verification report includes next_context_needs

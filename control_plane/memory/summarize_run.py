@@ -47,6 +47,10 @@ class RunSummarizer:
         runtime_plan: dict[str, Any] | None,
         verifications: list[dict[str, Any]] | None,
     ) -> str:
+        if output.get("status") == "completed":
+            return "complete_and_handoff"
+        if output.get("status") == "failed":
+            return "stop_and_escalate"
         if output.get("status") == "pending_primary_execution":
             return "execute_primary"
         if output.get("status") == "pending_paired_execution":

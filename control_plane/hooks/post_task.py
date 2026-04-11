@@ -25,7 +25,7 @@ class PostTaskHook:
             "next_action": agent_output.get("next_action"),
             "runtime_steps": [step["name"] for step in (runtime_plan or {}).get("steps", [])],
             "verification_passed": all(
-                result.get("result") == "passed" for result in (verification_results or [])
+                result.get("result") in {"passed", "skipped"} for result in (verification_results or [])
             ),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }

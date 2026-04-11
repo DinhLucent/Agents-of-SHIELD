@@ -31,7 +31,12 @@ class KnowledgeRetriever:
         modules = self._infer_modules(task, classification, explicit_files)
         small_task = self._is_small_task(task, explicit_files, modules)
 
-        if not handoff_refs:
+        if not handoff_refs and self._should_autoload_handoffs(
+            small_task=small_task,
+            explicit_files=explicit_files,
+            explicit_tests=explicit_tests,
+            modules=modules,
+        ):
             handoff_refs = self._find_recent_handoffs(limit=2)
 
         files = explicit_files if explicit_files else self._paths_for_modules(modules, include_entrypoints=True)
@@ -99,7 +104,8 @@ class KnowledgeRetriever:
         handoffs_dir = self.hub_dir / "handoffs"
         if not handoffs_dir.exists():
             return []
-        recent = sorted(handoffs_dir.glob("*.md"), key=lambda path: path.stat().st_mtime, reverse=True)
+        files = [*handoffs_dir.glob("*.json"), *handoffs_dir.glob("*.md")]
+        recent = sorted(files, key=lambda path: path.stat().st_mtime, reverse=True)
         return [str(path.relative_to(self.repo_root)) for path in recent[:limit]]
 
     def _read_dashboard_snapshot(self) -> dict[str, Any] | None:
@@ -155,6 +161,18 @@ class KnowledgeRetriever:
         if any(word in description for word in high_risk_words):
             return False
         return len(explicit_files) <= 2 and len(modules) <= 1
+
+    def _should_autoload_handoffs(
+        self,
+        small_task: bool,
+        explicit_files: list[str],
+        explicit_tests: list[str],
+        modules: list[str],
+    ) -> bool:
+        """Only backfill handoffs when the task is not already self-contained."""
+        if small_task and (explicit_files or explicit_tests or modules):
+            return False
+        return True
 
     def _most_specific_modules(self, modules: list[str]) -> list[str]:
         ordered = sorted(self._merge_unique([], modules), key=lambda module: module.count("/"), reverse=True)

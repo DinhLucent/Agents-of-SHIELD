@@ -17,7 +17,7 @@ class HandoffRetriever:
             return []
 
         files = sorted(
-            self.handoffs_dir.glob("*.md"),
+            [*self.handoffs_dir.glob("*.json"), *self.handoffs_dir.glob("*.md")],
             key=lambda p: p.stat().st_mtime,
             reverse=True,
         )
