@@ -1,4 +1,4 @@
-"""Typecheck Runner — Runs type checkers on affected modules."""
+"""Run type checking and return stable structured results."""
 from __future__ import annotations
 
 import subprocess
@@ -19,20 +19,25 @@ class TypecheckRunner:
 
         try:
             proc = subprocess.run(
-                cmd, cwd=str(self.repo_root), capture_output=True, text=True, timeout=60
+                cmd,
+                cwd=str(self.repo_root),
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             return {
-                "name": cmd[0],
+                "name": "typecheck",
                 "result": "passed" if proc.returncode == 0 else "failed",
                 "details": proc.stdout[-800:] if proc.stdout else proc.stderr[-800:],
+                "command": cmd,
             }
-        except (subprocess.TimeoutExpired, FileNotFoundError) as e:
-            return {"name": "typecheck", "result": "skipped", "details": str(e)}
+        except (subprocess.TimeoutExpired, FileNotFoundError) as exc:
+            return {"name": "typecheck", "result": "skipped", "details": str(exc)}
 
     def _detect_typecheck_command(self, files: list[str] | None) -> list[str] | None:
         targets = files or ["."]
         if (self.repo_root / "pyproject.toml").exists():
-            return ["python", "-m", "mypy"] + targets
+            return ["python", "-m", "mypy", *targets]
         if (self.repo_root / "tsconfig.json").exists():
             return ["npx", "tsc", "--noEmit"]
         return None

@@ -1,33 +1,33 @@
 {
-    "task_id": "TASK-2026-001",
-    "status": "failed",
-    "checks": [
-        {
-            "name": "pytest",
-            "result": "failed",
-            "details": "test_refresh_rotation_expiry failed"
-        },
-        {
-            "name": "lint",
-            "result": "passed",
-            "details": ""
-        },
-        {
-            "name": "typecheck",
-            "result": "passed",
-            "details": ""
-        },
-        {
-            "name": "security",
-            "result": "passed",
-            "details": "No issues",
-            "findings": []
-        }
-    ],
-    "next_context_needs": [
-        "stack_trace",
-        "recent_auth_diff",
-        "token_rotation_helper"
-    ],
-    "recommended_next_role": "backend"
+  "schema_version": "2.1",
+  "task_id": "TASK-2026-001",
+  "status": "failed",
+  "checks": [
+    {
+      "name": "tests",
+      "result": "failed",
+      "details": "test_retry_context_narrowing failed with assertion on helper payload"
+    },
+    {
+      "name": "lint",
+      "result": "passed",
+      "details": ""
+    },
+    {
+      "name": "typecheck",
+      "result": "passed",
+      "details": ""
+    },
+    {
+      "name": "security",
+      "result": "passed",
+      "details": "No issues"
+    }
+  ],
+  "next_context_needs": [
+    "stack_trace",
+    "failing_test_source",
+    "retry_helper_context"
+  ],
+  "recommended_next_role": "backend"
 }

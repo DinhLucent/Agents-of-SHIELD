@@ -1,4 +1,4 @@
-"""Lint Runner — Runs linters on changed files."""
+"""Run lint checks and return stable structured results."""
 from __future__ import annotations
 
 import subprocess
@@ -19,22 +19,25 @@ class LintRunner:
 
         try:
             proc = subprocess.run(
-                cmd, cwd=str(self.repo_root), capture_output=True, text=True, timeout=60
+                cmd,
+                cwd=str(self.repo_root),
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
             return {
-                "name": cmd[0],
+                "name": "lint",
                 "result": "passed" if proc.returncode == 0 else "failed",
                 "details": proc.stdout[-800:] if proc.stdout else proc.stderr[-800:],
+                "command": cmd,
             }
-        except (subprocess.TimeoutExpired, FileNotFoundError) as e:
-            return {"name": "lint", "result": "skipped", "details": str(e)}
+        except (subprocess.TimeoutExpired, FileNotFoundError) as exc:
+            return {"name": "lint", "result": "skipped", "details": str(exc)}
 
     def _detect_lint_command(self, files: list[str] | None) -> list[str] | None:
         targets = files or ["."]
-        # Python: ruff or flake8
-        if any((self.repo_root / cfg).exists() for cfg in ("ruff.toml", "pyproject.toml", ".flake8")):
-            return ["python", "-m", "ruff", "check"] + targets
-        # JS/TS: eslint
+        if any((self.repo_root / config).exists() for config in ("ruff.toml", "pyproject.toml", ".flake8")):
+            return ["python", "-m", "ruff", "check", *targets]
         if (self.repo_root / ".eslintrc.json").exists() or (self.repo_root / ".eslintrc.js").exists():
-            return ["npx", "eslint"] + targets
+            return ["npx", "eslint", *targets]
         return None

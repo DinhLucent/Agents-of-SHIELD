@@ -1,9 +1,4 @@
-"""Compile Skills — Parse Skills/**/SKILL.md → skill_index.json.
-
-Extracts tags, triggers, preferred roles, and task types from skill
-content so the router knows when to load which skill without reading
-every SKILL.md at runtime.
-"""
+"""Compile skill metadata into skill_index.json."""
 from __future__ import annotations
 
 import json
@@ -14,22 +9,13 @@ from typing import Any
 import yaml
 
 
-# Role keywords to detect in skill text
 _ROLE_KEYWORDS = ["backend", "frontend", "qa", "reviewer", "security", "docs", "devops"]
-
-# Task type keywords
-_TASK_TYPE_KEYWORDS = [
-    "bugfix", "feature", "refactor", "documentation", "release", "incident", "test",
-]
-
-# Trigger keywords
+_TASK_TYPE_KEYWORDS = ["bugfix", "feature", "refactor", "documentation", "release", "incident", "test"]
 _TRIGGER_KEYWORDS = [
     "auth", "login", "token", "release", "doc", "bug", "incident",
     "refactor", "test", "deploy", "security", "api", "database",
     "performance", "review", "scan", "audit",
 ]
-
-# Context type keywords
 _CONTEXT_KEYWORDS = ["task_packet", "code", "tests", "handoff", "verification_report"]
 
 
@@ -40,12 +26,10 @@ def compile_skills(repo_root: Path) -> Path:
 
     compiled: dict[str, Any] = {}
 
-    # Scan Skills/ (project-level skills)
     skills_root = repo_root / "Skills"
     if skills_root.exists():
         _scan_skill_tree(skills_root, skills_root, repo_root, compiled)
 
-    # Scan .skills_pool/ (external skills)
     pool_root = repo_root / ".skills_pool"
     if pool_root.exists():
         _scan_skill_tree(pool_root, pool_root, repo_root, compiled, prefix=".skills_pool/")
@@ -74,7 +58,6 @@ def _parse_skill(path: Path, repo_root: Path) -> dict[str, Any]:
     text = path.read_text(encoding="utf-8", errors="replace")
     name = path.parent.name
 
-    # Try YAML frontmatter
     frontmatter: dict[str, Any] = {}
     body = text
     fm_match = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)", text, re.DOTALL)
@@ -85,8 +68,7 @@ def _parse_skill(path: Path, repo_root: Path) -> dict[str, Any]:
             pass
         body = fm_match.group(2)
 
-    # Extract first meaningful paragraph as summary
-    lines = [l.strip() for l in body.splitlines() if l.strip() and not l.startswith("#")]
+    lines = [line.strip() for line in body.splitlines() if line.strip() and not line.startswith("#")]
     summary = " ".join(lines[:3])[:300]
 
     return {
@@ -102,27 +84,28 @@ def _parse_skill(path: Path, repo_root: Path) -> dict[str, Any]:
 
 
 def _extract_tags(name: str, text: str) -> list[str]:
-    """Build tag list from skill name + content keywords."""
+    """Build tag list from skill name and content keywords."""
     base = name.replace("_", "-").lower().split("-")
     lower = text.lower()
     extra = [
-        kw for kw in _TRIGGER_KEYWORDS + ["token", "session", "frontend", "backend", "qa"]
-        if kw in lower
+        keyword
+        for keyword in _TRIGGER_KEYWORDS + ["token", "session", "frontend", "backend", "qa"]
+        if keyword in lower
     ]
     return sorted(set(base + extra))
 
 
 def _infer_from_keywords(text: str, keywords: list[str], default: list[str]) -> list[str]:
     lower = text.lower()
-    found = [kw for kw in keywords if kw in lower]
+    found = [keyword for keyword in keywords if keyword in lower]
     return found or default
 
 
 def _infer_triggers(name: str, text: str) -> list[str]:
     combined = f"{name.lower()} {text.lower()}"
-    return sorted({t for t in _TRIGGER_KEYWORDS if t in combined})
+    return sorted({trigger for trigger in _TRIGGER_KEYWORDS if trigger in combined})
 
 
 if __name__ == "__main__":
     result = compile_skills(Path(".").resolve())
-    print(f"Compiled skill index → {result}")
+    print(f"Compiled skill index -> {result}")

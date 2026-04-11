@@ -1,0 +1,18 @@
+{
+  "control_plane/hooks": {
+    "paths": [
+      "control_plane/hooks"
+    ],
+    "owners": [
+      "backend",
+      "qa"
+    ],
+    "entrypoints": [
+      "control_plane/hooks/__init__.py"
+    ],
+    "related_tests": [],
+    "dependencies": [],
+    "risk_level": "medium",
+    "summary_fragment": "knowledge/compiled/context_fragments/control_plane__hooks.summary.json"
+  }
+}

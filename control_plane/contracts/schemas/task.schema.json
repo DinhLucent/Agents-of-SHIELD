@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "title",
+    "description",
+    "assigned_role",
+    "domain",
+    "inputs",
+    "constraints",
+    "acceptance_criteria"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "assigned_role": { "type": "string" },
+    "priority": { "type": "string" },
+    "status": { "type": "string" },
+    "domain": { "type": "string" },
+    "inputs": {
+      "type": "object",
+      "required": ["related_paths", "related_tests", "related_handoffs"],
+      "properties": {
+        "related_paths": { "type": "array", "items": { "type": "string" } },
+        "related_tests": { "type": "array", "items": { "type": "string" } },
+        "related_handoffs": { "type": "array", "items": { "type": "string" } },
+        "related_logs": { "type": "array", "items": { "type": "string" } },
+        "related_modules": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "constraints": { "type": "array", "items": { "type": "string" } },
+    "acceptance_criteria": { "type": "array", "items": { "type": "string" } },
+    "metadata": { "type": "object" }
+  }
+}

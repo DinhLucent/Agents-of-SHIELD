@@ -1,7 +1,4 @@
-"""Dashboard Snapshot — Parse DASHBOARD.md → machine-readable JSON.
-
-Agents read the JSON snapshot instead of parsing markdown every task.
-"""
+"""Parse DASHBOARD.md into a machine-readable snapshot."""
 from __future__ import annotations
 
 import json
@@ -36,13 +33,10 @@ def build_dashboard_snapshot(repo_root: Path) -> Path:
         snapshot["focus_modules"] = _extract_focus_modules(text)
         snapshot["raw_preview"] = text.splitlines()[:40]
 
-    # Also scan .hub/handoffs for recent
     handoffs_dir = repo_root / ".hub" / "handoffs"
     if handoffs_dir.exists():
-        recent = sorted(handoffs_dir.glob("*"), key=lambda p: p.stat().st_mtime, reverse=True)
-        snapshot["recent_handoffs"] = [
-            str(h.relative_to(repo_root)) for h in recent[:5]
-        ]
+        recent = sorted(handoffs_dir.glob("*"), key=lambda path: path.stat().st_mtime, reverse=True)
+        snapshot["recent_handoffs"] = [str(path.relative_to(repo_root)) for path in recent[:5]]
 
     out_path = out_dir / "dashboard_snapshot.json"
     out_path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -60,7 +54,7 @@ def _extract_tasks(text: str, section: str) -> list[dict[str, str]]:
         if in_section and line.strip().startswith("#"):
             break
         if in_section and "|" in line and "---" not in line:
-            cells = [c.strip() for c in line.split("|") if c.strip()]
+            cells = [cell.strip() for cell in line.split("|") if cell.strip()]
             if len(cells) >= 3 and cells[0].startswith("TASK-"):
                 tasks.append({
                     "task_id": cells[0],
@@ -88,4 +82,4 @@ def _extract_focus_modules(text: str) -> list[str]:
 
 if __name__ == "__main__":
     result = build_dashboard_snapshot(Path(".").resolve())
-    print(f"Dashboard snapshot → {result}")
+    print(f"Dashboard snapshot -> {result}")

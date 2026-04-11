@@ -1,12 +1,4 @@
-"""Build Indexes — Master builder that runs all compilers + module index.
-
-Generates:
-  - role_index.json
-  - skill_index.json
-  - project_index.json + context_fragments/
-  - module_index.json
-  - build_manifest.json
-"""
+"""Build indexes and cached summaries for the control plane."""
 from __future__ import annotations
 
 import json
@@ -15,14 +7,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from control_plane.compiler.compile_docs import compile_docs
 from control_plane.compiler.compile_roles import compile_roles
 from control_plane.compiler.compile_skills import compile_skills
-from control_plane.compiler.compile_docs import compile_docs
+from control_plane.compiler.dashboard_snapshot import build_dashboard_snapshot
+from control_plane.contracts import DEFAULT_CONTRACT_VALIDATOR
 
 
-# ── Module index builder ─────────────────────────────────────
-
-DEFAULT_SOURCE_DIRS = ("src", "app", "services", "packages", "lib")
+DEFAULT_SOURCE_DIRS = ("src", "app", "services", "packages", "lib", "control_plane")
 DEFAULT_TEST_DIRS = ("tests", "test")
 
 
@@ -34,55 +26,94 @@ def build_module_index(repo_root: Path) -> Path:
     fragments_dir.mkdir(parents=True, exist_ok=True)
 
     modules: dict[str, Any] = {}
-
     source_roots = [repo_root / d for d in DEFAULT_SOURCE_DIRS if (repo_root / d).exists()]
     test_roots = [repo_root / d for d in DEFAULT_TEST_DIRS if (repo_root / d).exists()]
 
     for source_root in source_roots:
+        root_module_name = source_root.name
+        root_entrypoints = _find_entrypoints(repo_root, source_root)
+        root_related_tests = _find_related_tests(repo_root, root_module_name, test_roots)
+        if root_entrypoints:
+            modules[root_module_name] = _build_module_record(
+                repo_root=repo_root,
+                fragments_dir=fragments_dir,
+                module_name=root_module_name,
+                module_paths=[str(source_root.relative_to(repo_root))],
+                related_tests=root_related_tests,
+                entrypoints=root_entrypoints,
+            )
+
         for child in source_root.iterdir():
-            if not child.is_dir():
+            if not child.is_dir() or child.name.startswith("__"):
                 continue
 
-            module_name = child.name
+            module_name = (
+                child.name if source_root.name != "control_plane" else f"control_plane/{child.name}"
+            )
             module_paths = [str(child.relative_to(repo_root))]
             related_tests = _find_related_tests(repo_root, module_name, test_roots)
             entrypoints = _find_entrypoints(repo_root, child)
-            summary_fragment = fragments_dir / f"{module_name}.summary.json"
-
-            # Create placeholder fragment if none exists
-            if not summary_fragment.exists():
-                summary_fragment.write_text(
-                    json.dumps({
-                        "module": module_name,
-                        "summary": f"Auto-generated summary placeholder for {module_name}.",
-                        "paths": module_paths,
-                        "entrypoints": entrypoints,
-                        "related_tests": related_tests,
-                    }, indent=2, ensure_ascii=False),
-                    encoding="utf-8",
-                )
-
-            modules[module_name] = {
-                "paths": module_paths,
-                "owners": _infer_owners(module_name),
-                "entrypoints": entrypoints,
-                "related_tests": related_tests,
-                "dependencies": [],
-                "risk_level": _infer_risk(module_name),
-                "summary_fragment": str(summary_fragment.relative_to(repo_root)),
-            }
+            modules[module_name] = _build_module_record(
+                repo_root=repo_root,
+                fragments_dir=fragments_dir,
+                module_name=module_name,
+                module_paths=module_paths,
+                related_tests=related_tests,
+                entrypoints=entrypoints,
+            )
 
     out_path = compiled_dir / "module_index.json"
+    DEFAULT_CONTRACT_VALIDATOR.validate("module_index", modules)
     out_path.write_text(json.dumps(modules, indent=2, ensure_ascii=False), encoding="utf-8")
     return out_path
 
 
+def _build_module_record(
+    repo_root: Path,
+    fragments_dir: Path,
+    module_name: str,
+    module_paths: list[str],
+    related_tests: list[str],
+    entrypoints: list[str],
+) -> dict[str, Any]:
+    fragment_name = module_name.replace("/", "__")
+    summary_fragment = fragments_dir / f"{fragment_name}.summary.json"
+    if not summary_fragment.exists():
+        summary_fragment.write_text(
+            json.dumps({
+                "module": module_name,
+                "summary": f"Auto-generated summary placeholder for {module_name}.",
+                "paths": module_paths,
+                "entrypoints": entrypoints,
+                "related_tests": related_tests,
+            }, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+
+    return {
+        "paths": module_paths,
+        "owners": _infer_owners(module_name),
+        "entrypoints": entrypoints,
+        "related_tests": related_tests,
+        "dependencies": [],
+        "risk_level": _infer_risk(module_name),
+        "summary_fragment": str(summary_fragment.relative_to(repo_root)),
+    }
+
+
 def _find_related_tests(repo_root: Path, module_name: str, test_roots: list[Path]) -> list[str]:
     matches: list[str] = []
+    module_tokens = module_name.replace("\\", "/").split("/")
+
     for test_root in test_roots:
         for path in test_root.rglob("*"):
-            if path.is_file() and module_name in path.as_posix():
+            if not path.is_file():
+                continue
+
+            normalized = path.as_posix().lower()
+            if any(token.lower() in normalized for token in module_tokens if token):
                 matches.append(str(path.relative_to(repo_root)))
+
     return sorted(set(matches))
 
 
@@ -91,7 +122,7 @@ def _find_entrypoints(repo_root: Path, module_dir: Path) -> list[str]:
     for path in module_dir.rglob("*.py"):
         name = path.name.lower()
         if name in {"main.py", "__init__.py"} or any(
-            kw in name for kw in ("service", "controller", "api", "router", "handler")
+            kw in name for kw in ("service", "controller", "api", "router", "handler", "orchestrator")
         ):
             candidates.append(str(path.relative_to(repo_root)))
     return sorted(set(candidates))[:10]
@@ -99,64 +130,75 @@ def _find_entrypoints(repo_root: Path, module_dir: Path) -> list[str]:
 
 def _infer_owners(module_name: str) -> list[str]:
     sensitive = {"auth", "billing", "payments", "security", "admin"}
-    if module_name in sensitive:
+    module_tokens = set(module_name.replace("\\", "/").split("/"))
+    if module_tokens & sensitive:
         return ["backend", "qa", "security"]
+    if module_name.startswith("control_plane/"):
+        return ["backend", "qa"]
     return ["backend", "qa"]
 
 
 def _infer_risk(module_name: str) -> str:
     high = {"auth", "billing", "payments", "security", "admin"}
-    return "high" if module_name in high else "medium"
+    module_tokens = set(module_name.replace("\\", "/").split("/"))
+    return "high" if module_tokens & high else "medium"
 
-
-# ── Master builder ───────────────────────────────────────────
 
 def build_all(repo_root: Path) -> dict[str, str]:
     """Run every compiler and return a manifest of generated files."""
     print("=" * 60)
-    print("  Agents-of-SHIELD — Knowledge Compiler v2")
+    print("  Agents-of-SHIELD - Knowledge Compiler v2")
     print("=" * 60)
 
     results: dict[str, str] = {}
+    errors: list[str] = []
 
-    # 1. Roles
-    print("\n[1/4] Compiling roles from manifest.yaml ...")
+    print("\n[1/5] Compiling roles from manifest.yaml ...")
     try:
         role_path = compile_roles(repo_root)
         results["role_index"] = str(role_path)
-        print(f"  ✓ {role_path}")
-    except Exception as e:
-        print(f"  ✗ Failed: {e}")
+        print(f"  [OK] {role_path}")
+    except Exception as exc:
+        errors.append(f"roles: {exc}")
+        print(f"  [FAIL] {exc}")
 
-    # 2. Skills
-    print("\n[2/4] Compiling skills from Skills/ ...")
+    print("\n[2/5] Compiling skills from Skills/ ...")
     try:
         skill_path = compile_skills(repo_root)
         results["skill_index"] = str(skill_path)
-        print(f"  ✓ {skill_path}")
-    except Exception as e:
-        print(f"  ✗ Failed: {e}")
+        print(f"  [OK] {skill_path}")
+    except Exception as exc:
+        errors.append(f"skills: {exc}")
+        print(f"  [FAIL] {exc}")
 
-    # 3. Docs
-    print("\n[3/4] Compiling docs ...")
+    print("\n[3/5] Compiling docs ...")
     try:
         doc_paths = compile_docs(repo_root)
-        for p in doc_paths:
-            results[p.stem] = str(p)
-            print(f"  ✓ {p}")
-    except Exception as e:
-        print(f"  ✗ Failed: {e}")
+        for path in doc_paths:
+            results[path.stem] = str(path)
+            print(f"  [OK] {path}")
+    except Exception as exc:
+        errors.append(f"docs: {exc}")
+        print(f"  [FAIL] {exc}")
 
-    # 4. Module index
-    print("\n[4/4] Building module index ...")
+    print("\n[4/5] Building dashboard snapshot ...")
+    try:
+        dashboard_path = build_dashboard_snapshot(repo_root)
+        results["dashboard_snapshot"] = str(dashboard_path)
+        print(f"  [OK] {dashboard_path}")
+    except Exception as exc:
+        errors.append(f"dashboard_snapshot: {exc}")
+        print(f"  [FAIL] {exc}")
+
+    print("\n[5/5] Building module index ...")
     try:
         module_path = build_module_index(repo_root)
         results["module_index"] = str(module_path)
-        print(f"  ✓ {module_path}")
-    except Exception as e:
-        print(f"  ✗ Failed: {e}")
+        print(f"  [OK] {module_path}")
+    except Exception as exc:
+        errors.append(f"module_index: {exc}")
+        print(f"  [FAIL] {exc}")
 
-    # Write build manifest
     manifest = {
         "built_at": datetime.now(timezone.utc).isoformat(),
         "repo_root": str(repo_root),
@@ -170,6 +212,9 @@ def build_all(repo_root: Path) -> dict[str, str]:
     print(f"  Build complete: {len(results)} artifacts")
     print(f"  Manifest: {manifest_path}")
     print(f"{'=' * 60}")
+
+    if errors:
+        raise RuntimeError("Compile failed: " + "; ".join(errors))
 
     return results
 

@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalPropertiesSchema": {
+    "type": "object",
+    "required": [
+      "paths",
+      "owners",
+      "entrypoints",
+      "related_tests",
+      "dependencies",
+      "risk_level",
+      "summary_fragment"
+    ],
+    "properties": {
+      "paths": { "type": "array", "items": { "type": "string" } },
+      "owners": { "type": "array", "items": { "type": "string" } },
+      "entrypoints": { "type": "array", "items": { "type": "string" } },
+      "related_tests": { "type": "array", "items": { "type": "string" } },
+      "dependencies": { "type": "array", "items": { "type": "string" } },
+      "risk_level": { "type": "string" },
+      "summary_fragment": { "type": "string" }
+    }
+  }
+}

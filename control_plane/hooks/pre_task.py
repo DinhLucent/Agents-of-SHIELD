@@ -1,13 +1,12 @@
-"""Pre-Task Hook — Runs before task execution.
-
-Ensures compiled indexes are fresh and dashboard snapshot is hydrated.
-"""
+"""Pre-task hook that keeps compiled state and dashboard cache fresh."""
 from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from control_plane.compiler.dashboard_snapshot import build_dashboard_snapshot
 
 
 class PreTaskHook:
@@ -22,41 +21,29 @@ class PreTaskHook:
         """Check caches and recompile if stale."""
         actions: list[str] = []
 
-        # Check if compiled indexes exist
         if not (self.compiled_dir / "role_index.json").exists():
             actions.append("role_index_missing")
         if not (self.compiled_dir / "skill_index.json").exists():
             actions.append("skill_index_missing")
         if not (self.compiled_dir / "project_index.json").exists():
             actions.append("project_index_missing")
+        if not (self.compiled_dir / "module_index.json").exists():
+            actions.append("module_index_missing")
 
-        # Hydrate dashboard snapshot
         self._hydrate_dashboard()
         actions.append("dashboard_snapshot_hydrated")
 
         return {
             "hook": "pre_task",
             "actions": actions,
-            "needs_recompile": any("missing" in a for a in actions),
+            "needs_recompile": any("missing" in action for action in actions),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def _hydrate_dashboard(self) -> None:
-        """Parse DASHBOARD.md → JSON snapshot."""
+        """Ensure runtime cache contains the canonical dashboard snapshot."""
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        dashboard_path = self.repo_root / "DASHBOARD.md"
-        if not dashboard_path.exists():
-            return
-
-        text = dashboard_path.read_text(encoding="utf-8", errors="replace")
-        snapshot = {
-            "active_tasks": [],
-            "blocked_tasks": [],
-            "recent_handoffs": [],
-            "focus_modules": [],
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-            "raw_summary": text[:500],
-        }
-
-        out_path = self.cache_dir / "current_dashboard.json"
-        out_path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False), encoding="utf-8")
+        snapshot_path = build_dashboard_snapshot(self.repo_root)
+        snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+        current_path = self.cache_dir / "current_dashboard.json"
+        current_path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False), encoding="utf-8")

@@ -1,8 +1,4 @@
-"""Compile Roles — Parse manifest.yaml → role_index.json.
-
-Reads the existing manifest.yaml (list-of-dicts format) and produces
-a compiled role_index.json that the runtime can consume directly.
-"""
+"""Compile manifest.yaml into role_index.json."""
 from __future__ import annotations
 
 import json
@@ -13,7 +9,6 @@ from typing import Any
 import yaml
 
 
-# Default capabilities when manifest doesn't specify runtime block
 _DEFAULT_TASK_TYPES: dict[str, list[str]] = {
     "cto": ["architecture", "review", "planning"],
     "backend": ["bugfix", "feature", "refactor"],
@@ -29,7 +24,7 @@ _DEFAULT_TASK_TYPES: dict[str, list[str]] = {
 
 
 def _normalise_role_key(agent_id: str) -> str:
-    """Strip '-agent' suffix for cleaner index keys."""
+    """Strip the -agent suffix for cleaner index keys."""
     return re.sub(r"-agent$", "", agent_id)
 
 
@@ -43,18 +38,13 @@ def compile_roles(repo_root: Path) -> Path:
         raise FileNotFoundError(f"manifest.yaml not found: {manifest_path}")
 
     data = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
-
-    # manifest.yaml uses a list of agent dicts, not a dict-of-dicts
     agents_list: list[dict[str, Any]] = data.get("agents", [])
     active_ids: list[str] = data.get("active_agents", [])
-
     compiled: dict[str, Any] = {}
 
     for agent in agents_list:
         agent_id = agent.get("id", "")
         role_key = _normalise_role_key(agent_id)
-
-        # Check for inline runtime block (v2 manifest extension)
         runtime = agent.get("runtime", {})
 
         compiled[role_key] = {
@@ -85,4 +75,4 @@ def compile_roles(repo_root: Path) -> Path:
 
 if __name__ == "__main__":
     result = compile_roles(Path(".").resolve())
-    print(f"Compiled role index → {result}")
+    print(f"Compiled role index -> {result}")

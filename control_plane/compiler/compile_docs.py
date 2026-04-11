@@ -1,8 +1,4 @@
-"""Compile Docs — Parse markdown docs → project_index.json + context fragments.
-
-Reads governance and documentation markdown files, extracts summaries,
-and produces JSON fragments that the retriever can serve on demand.
-"""
+"""Compile markdown docs into project_index.json and context fragments."""
 from __future__ import annotations
 
 import json
@@ -10,7 +6,6 @@ from pathlib import Path
 from typing import Any
 
 
-# Core docs to compile (relative to repo root)
 _DOC_FILES: list[str] = [
     "README.md",
     "OPERATING_RULES.md",
@@ -66,7 +61,6 @@ def compile_docs(repo_root: Path) -> list[Path]:
             "fragment_path": str(out_path.relative_to(repo_root)),
         })
 
-    # Write project index
     project_index_path = compiled_dir / "project_index.json"
     project_index_path.write_text(
         json.dumps(project_summary, indent=2, ensure_ascii=False),
@@ -87,7 +81,7 @@ def _extract_summary(text: str) -> str:
 
 
 def _extract_sections(text: str) -> list[dict[str, str]]:
-    """Extract ## headings as a flat list of section names."""
+    """Extract level-two headings as a flat list of section names."""
     sections: list[dict[str, str]] = []
     for line in text.splitlines():
         stripped = line.strip()
@@ -99,5 +93,5 @@ def _extract_sections(text: str) -> list[dict[str, str]]:
 
 if __name__ == "__main__":
     results = compile_docs(Path(".").resolve())
-    for r in results:
-        print(f"  → {r}")
+    for result in results:
+        print(f"  -> {result}")

@@ -1,33 +1,32 @@
-# Enhanced Task Template v2
-# Use with: control_plane/orchestrator.py
-# The orchestrator reads this format and generates task_packet.json
+# Frozen Task Contract v2.1
 
+schema_version: "2.1"
 id: TASK-2026-001
-title: Fix refresh token loop on login flow
+title: Tighten retry packet context selection for small control-plane tasks
 description: >
-  User bị logout sai thời điểm khi refresh token rotation xảy ra.
+  Small bugfix in the control plane so retry packets add only targeted context
+  after verification failures.
 assigned_role: backend
 priority: high
 status: queued
-domain: auth
+domain: general
 
 inputs:
   related_paths:
-    - src/auth/login.py
-    - src/auth/token_service.py
-  related_tests:
-    - tests/auth/test_refresh.py
+    - control_plane/hooks/on_verification_fail.py
+  related_tests: []
   related_handoffs: []
   related_logs: []
+  related_modules:
+    - control_plane/hooks
 
 constraints:
-  - do_not_change_api_contract
-  - keep_cookie_strategy
+  - keep_retry_packet_small
+  - preserve_existing_retry_contract
 
 acceptance_criteria:
-  - refresh token rotation works
-  - login flow remains unchanged
-  - auth tests pass
+  - retry packet includes only targeted context
+  - verification report includes next_context_needs
 
 metadata:
   created_by: CEO

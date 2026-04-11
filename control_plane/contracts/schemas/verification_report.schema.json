@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_id",
+    "status",
+    "checks",
+    "next_context_needs",
+    "recommended_next_role"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "task_id": { "type": "string" },
+    "status": { "type": "string" },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "result"],
+        "properties": {
+          "name": { "type": "string" },
+          "result": { "type": "string" },
+          "details": { "type": "string" }
+        }
+      }
+    },
+    "next_context_needs": { "type": "array", "items": { "type": "string" } },
+    "recommended_next_role": { "type": "string" }
+  }
+}

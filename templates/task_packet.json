@@ -1,17 +1,56 @@
 {
+  "schema_version": "2.1",
   "task_id": "TASK-2026-001",
   "session_id": "SESSION-2026-04-11-001",
   "role": "backend",
-  "secondary_roles": [],
-  "mode": "solo",
+  "secondary_roles": [
+    "reviewer"
+  ],
+  "mode": "paired",
+  "execution_mode": {
+    "mode": "paired",
+    "primary_role": "backend",
+    "secondary_roles": [
+      "reviewer"
+    ],
+    "reason": "high-risk verification flow requires independent review"
+  },
+  "runtime_plan": {
+    "mode": "paired",
+    "steps": [
+      {
+        "name": "primary_execute",
+        "role": "backend",
+        "status": "pending"
+      },
+      {
+        "name": "secondary_review",
+        "role": "reviewer",
+        "status": "pending"
+      }
+    ],
+    "assigned_roles": [
+      "backend",
+      "reviewer"
+    ],
+    "review_required": true,
+    "verification_profile": "reviewed"
+  },
+  "routing": {
+    "primary_role": "backend",
+    "secondary_roles": [
+      "reviewer"
+    ],
+    "mode": "paired"
+  },
   "task_type": "bugfix",
-  "domain": "auth",
-  "risk_level": "medium",
-  "goal": "Fix refresh token loop on login flow",
-  "summary": "Refresh token rotation causes unintended logout timing.",
+  "domain": "general",
+  "risk_level": "high",
+  "goal": "Tighten retry packet context selection for small control-plane tasks",
+  "summary": "Small bugfix so retry packets add only targeted context after verification failures.",
   "rules": [
-    "Do not change public API contract",
     "Prefer minimal patch",
+    "Do not change unrelated modules",
     "Update handoff after execution"
   ],
   "context_budget": {
@@ -19,26 +58,32 @@
     "max_code_tokens": 8000,
     "max_memory_tokens": 1500
   },
+  "modules": [
+    "control_plane/hooks"
+  ],
   "context_fragments": [
     {
-      "id": "auth_module_summary",
+      "id": "operating_rules.summary",
       "type": "module_summary",
-      "path": "knowledge/compiled/context_fragments/auth.summary.json"
+      "path": "knowledge/compiled/context_fragments/operating_rules.summary.json"
+    },
+    {
+      "id": "control_plane__hooks.summary",
+      "type": "module_summary",
+      "path": "knowledge/compiled/context_fragments/control_plane__hooks.summary.json"
     }
   ],
   "files": [
-    "src/auth/login.py",
-    "src/auth/token_service.py"
+    "control_plane/hooks/on_verification_fail.py"
   ],
-  "tests": [
-    "tests/auth/test_refresh.py"
-  ],
+  "tests": [],
   "handoff_refs": [],
   "memory_refs": [],
   "verification_plan": [
     "lint changed files",
-    "typecheck auth module",
-    "pytest tests/auth/test_refresh.py"
+    "typecheck related module",
+    "run related tests",
+    "security check"
   ],
   "expected_outputs": [
     "patch",
@@ -46,8 +91,7 @@
     "handoff_update"
   ],
   "acceptance_criteria": [
-    "refresh token rotation works",
-    "login flow remains unchanged",
-    "auth tests pass"
+    "retry packet includes only targeted context",
+    "verification report includes next_context_needs"
   ]
 }

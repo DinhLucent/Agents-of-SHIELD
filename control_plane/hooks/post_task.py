@@ -1,7 +1,4 @@
-"""Post-Task Hook — Runs after task execution.
-
-Summarizes run, compacts memory, and updates dashboard state.
-"""
+"""Post-task hook for compact runtime status reporting."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -16,6 +13,7 @@ class PostTaskHook:
         task: dict[str, Any],
         session_id: str,
         agent_output: dict[str, Any],
+        runtime_plan: dict[str, Any] | None = None,
         verification_results: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         return {
@@ -23,8 +21,11 @@ class PostTaskHook:
             "task_id": task.get("id"),
             "session_id": session_id,
             "status": agent_output.get("status"),
+            "execution_mode": agent_output.get("mode"),
+            "next_action": agent_output.get("next_action"),
+            "runtime_steps": [step["name"] for step in (runtime_plan or {}).get("steps", [])],
             "verification_passed": all(
-                v.get("result") == "passed" for v in (verification_results or [])
+                result.get("result") == "passed" for result in (verification_results or [])
             ),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
