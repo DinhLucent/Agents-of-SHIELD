@@ -1,0 +1,82 @@
+# ════════════════════════════════════════════════════════════════
+# TASK HUB — BACKLOG (Central Task Queue)
+# ════════════════════════════════════════════════════════════════
+#
+# CẢNH BÁO CHO AI AGENT:
+# - Đây là nơi DUY NHẤT quản lý và phân phối task cho các Agent.
+# - Rất quan trọng: `assigned_role` phải khớp CHÍNH XÁC với một role trong dự án (ví dụ định nghĩa trong manifest.yaml).
+# - Trạng thái hợp lệ (status): todo | claimed | in_progress | in_review | done | blocked
+# - Mức độ ưu tiên (priority): critical | high | medium | low
+# - Chuẩn thời gian (created_at/completed_at/deadline): ISO 8601 (VD: 2026-04-03T15:00:00+07:00)
+# ════════════════════════════════════════════════════════════════
+
+project: "[Tên Dự Án]"
+sprint: [Số Sprint hoặc Tên Giai Đoạn]
+created_by: "[Tên Agent Tạo Backlog, ví dụ: producer-agent]"
+
+tasks:
+  # ════════════════════════════════════════════════════════════════
+  # SPRINT 1 — [Tên Mục Tiêu Của Sprint]
+  # ════════════════════════════════════════════════════════════════
+
+  - id: "TASK-001"
+    title: "[Tiêu đề ngắn gọn, bắt đầu bằng Động từ]"
+    description: |
+      [Mô tả chi tiết của task, những gì cần đạt được, bối cảnh.]
+      [Có thể viết nhiều dòng để diễn giải logic.]
+    assigned_role: "[agent-role]"
+    priority: "high"
+    status: "todo"
+    dependencies: [] # Dạng array, VD: ["TASK-002", "TASK-003"]
+    blocks: [] # Dạng array, các task bị chờ bởi task này
+    created_at: "YYYY-MM-DDTHH:MM:SS+07:00"
+    started_at: null
+    completed_at: null
+    deadline: "YYYY-MM-DD"
+    acceptance_criteria:
+      - "[Tiêu chí 1 cụ thể, đo lường được]"
+      - "[Tiêu chí 2, ví dụ: Unit test pass 100%]"
+      - "[Tiêu chí 3, ví dụ: Không tạo log rác]"
+    output_files: [] # Các file hoặc artifact dự kiến xuất ra
+    notes: "[Tham chiếu đến specs, links, hoặc điều kiện ngoại lệ]"
+
+  - id: "TASK-002"
+    title: "[Ví dụ: Xây dựng database schema cho User]"
+    description: "Tạo bảng User, cấu hình ORM và implement các hàm cơ bản."
+    assigned_role: "backend-agent"
+    priority: "medium"
+    status: "todo"
+    dependencies: ["TASK-001"]
+    blocks: []
+    created_at: "YYYY-MM-DDTHH:MM:SS+07:00"
+    started_at: null
+    completed_at: null
+    deadline: "YYYY-MM-DD"
+    acceptance_criteria:
+      - "Bảng users được khởi tạo với Alembic/Prisma"
+      - "Code ORM chạy không lỗi"
+    output_files: []
+    notes: ""
+
+  # ════════════════════════════════════════════════════════════════
+  # SPRINT 2 — [Tên Mục Tiêu Của Sprint Tiếp Theo]
+  # - Rule: Mỗi Sprint chứa 5-10 Task.
+  # - Rule: Các Sprint được ngăn cách rõ ràng bằng block comment.
+  # ════════════════════════════════════════════════════════════════
+
+  - id: "TASK-003"
+    title: "[Tên Task Sprint 2]"
+    description: "[Mô tả...]"
+    assigned_role: "frontend-agent"
+    priority: "medium"
+    status: "todo"
+    dependencies: ["TASK-002"]
+    blocks: []
+    created_at: "YYYY-MM-DDTHH:MM:SS+07:00"
+    started_at: null
+    completed_at: null
+    deadline: "YYYY-MM-DD"
+    acceptance_criteria:
+      - "[Tiêu chí...]"
+    output_files: []
+    notes: ""
