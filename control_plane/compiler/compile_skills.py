@@ -19,8 +19,14 @@ _TRIGGER_KEYWORDS = [
 _CONTEXT_KEYWORDS = ["task_packet", "code", "tests", "handoff", "verification_report"]
 
 
-def compile_skills(repo_root: Path) -> Path:
-    """Walk Skills/ and .skills_pool/ to produce skill_index.json."""
+def compile_skills(repo_root: Path, include_pool: bool = False) -> Path:
+    """Walk Skills/ to produce skill_index.json.
+
+    Args:
+        repo_root: Repository root path.
+        include_pool: If True, also scan .skills_pool/ (optional catalog).
+                      Default False — runtime does not depend on pool skills.
+    """
     compiled_dir = repo_root / "knowledge" / "compiled"
     compiled_dir.mkdir(parents=True, exist_ok=True)
 
@@ -30,9 +36,10 @@ def compile_skills(repo_root: Path) -> Path:
     if skills_root.exists():
         _scan_skill_tree(skills_root, skills_root, repo_root, compiled)
 
-    pool_root = repo_root / ".skills_pool"
-    if pool_root.exists():
-        _scan_skill_tree(pool_root, pool_root, repo_root, compiled, prefix=".skills_pool/")
+    if include_pool:
+        pool_root = repo_root / ".skills_pool"
+        if pool_root.exists():
+            _scan_skill_tree(pool_root, pool_root, repo_root, compiled, prefix=".skills_pool/")
 
     out_path = compiled_dir / "skill_index.json"
     out_path.write_text(json.dumps(compiled, indent=2, ensure_ascii=False), encoding="utf-8")

@@ -27,7 +27,7 @@ Bất cứ khi nào bạn hoàn thành một tác vụ (task), hoặc cần kế
    - Nhận định chính xác Bug/Issue đang tồn đọng thực tế chứ không phải suy đoán vô căn cứ.
    - Xác định rõ nhiệm vụ của công đoạn/ticket tiếp theo cần để lại dấu ấn gì.
 3. **Tạo Báo Cáo Mới:**
-   - Viết ra một file markdown theo đúng chuẩn cấu trúc ở template. Khuyến nghị đặt trong một thư mục quy ước (ví dụ: `.hub/handoffs/TASK-XXX.md` hoặc `reports/TASK-XXX.md`).
+   - Viết ra một file markdown theo đúng chuẩn cấu trúc ở template. Đặt trong `runtime/reports/` hoặc thư mục phù hợp của dự án.
    - Yêu cầu điền đầy đủ và súc tích dữ liệu thực tế.
 
 ---
@@ -42,10 +42,10 @@ Khi một hạng mục chính được thay đổi (Ví dụ: Một Task chuyể
    - Thay đổi biến `Last Updated` thành thời gian chính xác hiện tại (YYYY-MM-DD).
    - Thay đổi biến `Last Agent` thành tên của Agent chịu trách nhiệm (Vai trò hiện tại của bạn).
    - Chỉnh sửa `Progress` hoặc `Summary` một cách cô đọng (tuyệt đối không qua 3 câu). Đừng liệt kê vòng vo.
-2. **Đồng bộ `.hub/backlog.yaml` (Rất quan trọng):**
-   - TÌM kiếm Ticket tương ứng trong file `backlog.yaml`.
-   - CẬP NHẬT `status` thành giá trị hợp lệ: `todo | claimed | in_progress | in_review | done | blocked`.
-   - CẬP NHẬT `started_at`, `completed_at`, hoặc `output_files` tuỳ theo việc bắt đầu hay kết thúc ticket.
+2. **Đồng bộ trạng thái (V2 Orchestrator):**
+   - Trạng thái task được quản lý tự động bởi `task_state_machine.py`.
+   - Kết quả verification được lưu trong `runtime/state/verification_reports/`.
+   - Nếu cần cập nhật thủ công, sửa `status` trong file task YAML tương ứng.
 3. **Chuyển Trạng Thái Task trên DASHBOARD:**
    - Di chuyển các dòng chứa Task ID tương ứng qua lại giữa các bảng: `TODO` -> `IN PROGRESS` -> `DONE`.
    - Nếu khởi tạo task mới, luôn định danh và thêm vào bảng `TODO`.

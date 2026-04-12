@@ -25,9 +25,9 @@ def _make_config(repo_root: Path) -> OrchestratorConfig:
     )
 
 
-def cmd_compile(repo_root: Path) -> None:
+def cmd_compile(repo_root: Path, include_pool: bool = False) -> None:
     """Compile all knowledge source → indexes."""
-    build_all(repo_root)
+    build_all(repo_root, include_pool=include_pool)
 
 
 def cmd_run(repo_root: Path, task_path: Path | None = None) -> None:
@@ -84,7 +84,8 @@ def main() -> None:
         task_file = Path(args[1]) if len(args) > 1 else None
         cmd_plan(repo_root, task_file)
     elif args[0] == "compile":
-        cmd_compile(repo_root)
+        include_pool = "--include-pool" in args
+        cmd_compile(repo_root, include_pool=include_pool)
     else:
         print(f"Unknown command: {args[0]}")
         print("Usage: python run_orchestrator.py [compile|plan [task.yaml]|run [task.yaml]]")

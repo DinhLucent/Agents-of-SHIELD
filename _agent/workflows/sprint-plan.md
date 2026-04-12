@@ -1,15 +1,19 @@
 ---
-description: Plan the next sprint and populate the Task Hub backlog.
+description: Plan the next sprint — define tasks, assign roles, and set acceptance criteria.
 ---
 
-1. Read the instructions in `Skills/Roles/Management/sprint-plan/SKILL.md` (nếu có).
-2. Khi lập kế hoạch Sprint và phân chia task, bạn PHẢI cập nhật file `.hub/backlog.yaml`.
-3. BẮT BUỘC sử dụng cấu trúc đã được định nghĩa tại `templates/BACKLOG_TEMPLATE.yaml` để ghi `backlog.yaml` cho chuẩn mực.
-4. **Quy định chi tiết về cách viết SPRINT và gom nhóm TASK (Cực kỳ quan trọng):**
-   - **Phân chia Sprint rõ ràng:** Giữa các Sprint PHẢI bắt buộc được phân tách bằng block comment thật nổi bật `# ════ SPRINT X — [Tên mục tiêu Sprint] ════`.
-   - **Kích cỡ Sprint hợp lý:** Không dồn quá nhiều Task vào một Sprint. Một Sprint nên dài khoảng 5-10 tasks có tính phụ thuộc chặt chẽ và chung 1 chủ đề (Goal).
-   - **Tính lệ thuộc (Dependencies):** Các Task trong Sprint 2 thường phải có trường `dependencies` chỉ vào các Task cốt lõi hoàn thành ở Sprint 1. Không để dependency vòng tròn hoặc không thực tế.
-   - `assigned_role`: Phải match với role có sẵn của hệ thống.
-   - `status`: Chỉ nhận `todo | claimed | in_progress | in_review | done | blocked`.
-   - Phải có mảng `acceptance_criteria` thật sự cụ thể để Agent thi công có thể stick [x] khi hoàn thành.
-5. Guide the user through planning the next set of tasks, presenting them in the standard YAML format before officially persisting them to the backlog file.
+# Sprint Planning Workflow (V2)
+
+> Under V2, tasks are defined as `task.yaml` files and processed by the orchestrator.
+> The legacy `.hub/backlog.yaml` is no longer used.
+
+1. Review current project state via `DASHBOARD.md` and recent `runtime/` reports.
+2. Identify the next set of work items based on project goals.
+3. For each task, create a `task.yaml` following the schema at `templates/task.yaml`:
+   - `assigned_role`: Must match a role defined in `manifest.yaml`
+   - `status`: `queued` for new tasks
+   - `acceptance_criteria`: Specific, verifiable conditions
+   - `inputs.related_paths`: Files the task will likely touch
+4. Group tasks into logical sprints (5-10 tasks per sprint).
+5. Present the plan to the user for approval before persisting.
+6. Run tasks via: `python run_orchestrator.py run <task.yaml>`

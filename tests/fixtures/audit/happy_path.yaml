@@ -1,0 +1,35 @@
+# Audit Fixture: Happy Path
+# Scenario: Simple bugfix that passes verification on first attempt.
+
+schema_version: "2.1"
+id: AUDIT-HAPPY-001
+title: "Fix typo in API error message"
+description: >
+  Simple bugfix that corrects a typo in the error response for the
+  /api/auth/login endpoint. Low-risk, single-file change.
+assigned_role: backend
+priority: low
+status: queued
+domain: general
+
+inputs:
+  related_paths:
+    - src/api/auth/login.py
+  related_tests:
+    - tests/api/test_login.py
+  related_handoffs: []
+  related_logs: []
+  related_modules:
+    - src/api/auth
+
+constraints:
+  - minimal_change_only
+
+acceptance_criteria:
+  - error message reads "Invalid credentials" instead of "Invald credentials"
+  - existing tests still pass
+
+metadata:
+  fixture_type: happy_path
+  expected_outcome: passed_on_first_attempt
+  expected_attempts: 1

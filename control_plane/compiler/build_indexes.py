@@ -144,8 +144,12 @@ def _infer_risk(module_name: str) -> str:
     return "high" if module_tokens & high else "medium"
 
 
-def build_all(repo_root: Path) -> dict[str, str]:
-    """Run every compiler and return a manifest of generated files."""
+def build_all(repo_root: Path, include_pool: bool = False) -> dict[str, str]:
+    """Run every compiler and return a manifest of generated files.
+
+    Args:
+        include_pool: If True, include .skills_pool/ in skill compilation.
+    """
     print("=" * 60)
     print("  Agents-of-SHIELD - Knowledge Compiler v2")
     print("=" * 60)
@@ -164,9 +168,10 @@ def build_all(repo_root: Path) -> dict[str, str]:
 
     print("\n[2/5] Compiling skills from Skills/ ...")
     try:
-        skill_path = compile_skills(repo_root)
+        skill_path = compile_skills(repo_root, include_pool=include_pool)
         results["skill_index"] = str(skill_path)
-        print(f"  [OK] {skill_path}")
+        pool_note = " (+ .skills_pool)" if include_pool else " (Skills/ only)"
+        print(f"  [OK] {skill_path}{pool_note}")
     except Exception as exc:
         errors.append(f"skills: {exc}")
         print(f"  [FAIL] {exc}")

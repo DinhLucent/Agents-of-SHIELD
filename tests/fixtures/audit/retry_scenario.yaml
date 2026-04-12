@@ -1,0 +1,43 @@
+# Audit Fixture: Retry Scenario
+# Scenario: Medium-risk task that fails verification once, then passes on retry.
+
+schema_version: "2.1"
+id: AUDIT-RETRY-001
+title: "Add input validation to user registration endpoint"
+description: >
+  Add email format validation and password strength check to the
+  POST /api/users/register endpoint. First attempt likely misses
+  edge cases caught by security checker.
+assigned_role: backend
+priority: medium
+status: queued
+domain: auth
+
+inputs:
+  related_paths:
+    - src/api/users/register.py
+    - src/validators/email.py
+  related_tests:
+    - tests/api/test_register.py
+    - tests/validators/test_email.py
+  related_handoffs: []
+  related_logs: []
+  related_modules:
+    - src/api/users
+    - src/validators
+
+constraints:
+  - preserve_existing_api_contract
+  - no_breaking_changes
+
+acceptance_criteria:
+  - email format is validated before saving
+  - password must be >= 8 chars with mixed case
+  - clear error messages returned for each validation failure
+  - security checker passes
+
+metadata:
+  fixture_type: retry_scenario
+  expected_outcome: passed_after_retry
+  expected_attempts: 2
+  expected_failure_reason: security_check_failed

@@ -1,0 +1,46 @@
+# Audit Fixture: Hard Fail
+# Scenario: High-risk task that exhausts all retries and fails permanently.
+
+schema_version: "2.1"
+id: AUDIT-FAIL-001
+title: "Migrate payment processor from Stripe v2 to v3 API"
+description: >
+  Major breaking change requiring coordinated updates across payment
+  service, webhook handlers, and billing module. Designed to exceed
+  the retry budget and trigger failure handoff.
+assigned_role: backend
+priority: critical
+status: queued
+domain: billing
+
+inputs:
+  related_paths:
+    - src/payments/stripe_client.py
+    - src/payments/webhook_handler.py
+    - src/billing/invoice_service.py
+  related_tests:
+    - tests/payments/test_stripe.py
+    - tests/billing/test_invoices.py
+  related_handoffs: []
+  related_logs: []
+  related_modules:
+    - src/payments
+    - src/billing
+
+constraints:
+  - no_data_loss
+  - backwards_compatible_rollback
+  - pci_compliance
+
+acceptance_criteria:
+  - all payment flows use Stripe v3 API
+  - webhook signatures validated with v3 scheme
+  - billing reconciliation passes for last 30 days
+  - zero-downtime migration path documented
+
+metadata:
+  fixture_type: hard_fail
+  expected_outcome: failed_after_max_retries
+  expected_attempts: 3
+  expected_failure_reason: acceptance_criteria_too_complex
+  expected_handoff_to: reviewer
