@@ -4,109 +4,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Session Prompt Builder - MyAgentSkills</title>
+    <title>Prompt Builder Pro Max - MyAgentSkills</title>
 
     <!-- Dependencies -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <!-- Styling -->
     <style>
+        :root {
+            --brand-primary: #6366f1;
+            --brand-secondary: #a855f7;
+            --bg-deep: #020617;
+            --bg-surface: #0f172a;
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+        }
+
         body {
-            background-color: #0f172a;
-            color: #f1f5f9;
-            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
             overflow: hidden;
         }
 
         .glass-panel {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(16px);
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .premium-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .premium-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            background: rgba(99, 102, 241, 0.05);
+            transform: translateY(-2px);
         }
 
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
         }
 
-        .shake {
-            animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+        .btn-pulse {
+            animation: pulse 2s infinite;
         }
 
-        @keyframes shake {
-
-            10%,
-            90% {
-                transform: translate3d(-1px, 0, 0);
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
             }
 
-            20%,
-            80% {
-                transform: translate3d(2px, 0, 0);
-            }
-
-            30%,
-            50%,
             70% {
-                transform: translate3d(-4px, 0, 0);
+                box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
             }
 
-            40%,
-            60% {
-                transform: translate3d(4px, 0, 0);
+            100% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
             }
-        }
-
-        .error-ring {
-            border-color: #ef4444 !important;
-            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
         }
 
         .fade-enter-active,
         .fade-leave-active {
-            transition: opacity 0.2s, transform 0.2s;
+            transition: all 0.3s ease;
         }
 
         .fade-enter-from,
         .fade-leave-to {
             opacity: 0;
-            transform: translateY(5px);
+            transform: scale(0.98);
+        }
+
+        .input-glow:focus {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+            border-color: var(--brand-primary);
+        }
+
+        .tag-glow {
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.1);
         }
     </style>
 </head>
 
-<body class="h-screen flex">
+<body class="h-screen flex selection:bg-indigo-500/30">
     <div id="app" class="flex w-full h-full">
 
         <!-- Sidebar -->
-        <aside class="w-80 glass-panel flex flex-col border-r border-white/5 shrink-0 z-20">
-            <div class="p-6 border-b border-white/5">
-                <div class="flex items-center space-x-3 mb-6">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg"><i
-                            class="fa-solid fa-bolt text-white"></i></div>
-                    <div class="leading-tight">
-                        <h1 class="font-bold text-white tracking-tight">Prompt Builder</h1>
-                        <p class="text-[10px] text-indigo-400 font-bold uppercase">v2 Production</p>
+        <aside class="w-80 glass-panel flex flex-col shrink-0 z-20 overflow-hidden">
+            <!-- Brand Header -->
+            <div class="p-8">
+                <div class="flex items-center space-x-4 mb-8">
+                    <div class="relative group">
+                        <div
+                            class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200">
+                        </div>
+                        <div
+                            class="relative w-12 h-12 rounded-xl bg-slate-900 border border-white/10 flex items-center justify-center">
+                            <i class="fa-solid fa-bolt-lightning text-xl text-indigo-400"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-extrabold text-white tracking-tight leading-none mb-1">PROMPT BUILDER
+                        </h1>
+                        <div class="flex items-center space-x-2">
+                            <span class="flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                            <p class="text-[10px] text-indigo-400/80 font-black uppercase tracking-widest">v2 PRO MAX
+                            </p>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Search -->
                 <div class="relative group">
-                    <i
-                        class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-indigo-400"></i>
-                    <input type="text" v-model="searchQuery" placeholder="Search templates, tags, used in..."
-                        class="w-full bg-slate-900 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-200 focus:outline-none focus:border-indigo-500">
+                    <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                        <i
+                            class="fa-solid fa-magnifying-glass text-xs text-slate-500 group-focus-within:text-indigo-400 transition-colors"></i>
+                    </div>
+                    <input type="text" v-model="searchQuery" placeholder="Search prompts..."
+                        class="w-full bg-slate-950/50 border border-white/5 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none input-glow transition-all">
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-hide">
+            <!-- Categories -->
+            <div class="flex-1 overflow-y-auto px-4 pb-8 space-y-8 scrollbar-hide">
                 <div v-for="cat in categories" :key="cat">
                     <template v-if="filteredTemplates(cat).length > 0">
-                        <h3 class="text-[10px] font-black text-gray-500 uppercase tracking-[2px] mb-3 px-2">{{cat}}</h3>
-                        <ul class="space-y-1">
+                        <div class="flex items-center justify-between mb-4 px-3">
+                            <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[2.5px]">{{cat}}</h3>
+                            <span class="text-[10px] text-slate-700 font-mono">{{filteredTemplates(cat).length}}</span>
+                        </div>
+                        <ul class="space-y-1.5">
                             <li v-for="tpl in filteredTemplates(cat)" :key="tpl.id">
                                 <button @click="selectTemplate(tpl)"
-                                    :class="['w-full text-left px-3 py-2 rounded-lg text-sm transition-all', 
-                                            selected?.id === tpl.id ? 'bg-indigo-600/20 text-indigo-400 font-semibold border border-indigo-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200']">
-                                    {{tpl.title}}
+                                    :class="['w-full text-left px-4 py-3 rounded-xl text-[13px] font-medium transition-all duration-300 group flex items-center justify-between', selected?.id === tpl.id ? 'bg-indigo-600/15 text-indigo-400 border border-indigo-500/20' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent']">
+                                    <span>{{tpl.title}}</span>
+                                    <i v-if="selected?.id === tpl.id"
+                                        class="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
                                 </button>
                             </li>
                         </ul>
@@ -116,89 +157,143 @@
         </aside>
 
         <!-- Main Form -->
-        <main class="flex-1 flex flex-col bg-[#0b1121] overflow-hidden">
+        <main class="flex-1 flex flex-col bg-slate-950/20 relative overflow-hidden backdrop-blur-sm shadow-inner">
+            <!-- Background Decoration -->
+            <div class="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10 opacity-30">
+                <div class="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-indigo-500/10 blur-[120px] rounded-full">
+                </div>
+                <div
+                    class="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-purple-500/10 blur-[120px] rounded-full">
+                </div>
+            </div>
+
             <Transition name="fade" mode="out-in">
-                <div v-if="!selected" class="flex-1 flex flex-col items-center justify-center text-gray-500 opacity-50">
-                    <i class="fa-solid fa-terminal text-6xl mb-4"></i>
-                    <p class="text-lg">Select a template to build your session prompt</p>
+                <!-- Welcome State -->
+                <div v-if="!selected" class="flex-1 flex flex-col items-center justify-center p-12 text-center">
+                    <div
+                        class="w-24 h-24 rounded-3xl bg-slate-900 border border-white/5 flex items-center justify-center mb-8 shadow-2xl">
+                        <i class="fa-solid fa-wand-magic-sparkles text-4xl text-slate-700"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-3">Power Your Workflow</h2>
+                    <p class="text-slate-500 max-w-md leading-relaxed">Select a template from the sidebar to begin
+                        crafting your high-intensity session prompt.</p>
                 </div>
 
+                <!-- Active Form -->
                 <div v-else class="h-full flex flex-col" :key="selected.id">
-                    <header class="p-8 border-b border-white/5">
-                        <div class="flex items-center space-x-2 mb-2">
+                    <!-- Form Header -->
+                    <header class="p-10 border-b border-white/5 bg-slate-900/10">
+                        <div class="flex items-center space-x-3 mb-4">
                             <span
-                                class="text-[10px] font-bold bg-indigo-500/10 text-indigo-400 py-0.5 px-2 rounded">{{selected.category}}</span>
-                            <div class="flex space-x-1">
+                                class="px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 text-[10px] font-extrabold uppercase tracking-widest border border-indigo-500/10">{{selected.category}}</span>
+                            <div class="flex gap-2">
                                 <span v-for="tag in selected.tags" :key="tag"
-                                    class="text-[10px] text-gray-500 border border-white/10 px-1.5 rounded">#{{tag}}</span>
+                                    class="text-[10px] text-slate-500 font-medium px-2 py-0.5 border border-white/5 rounded-full bg-white/5">#{{tag}}</span>
                             </div>
                         </div>
-                        <h2 class="text-3xl font-bold text-white mb-2">{{selected.title}}</h2>
-                        <p class="text-sm text-gray-400 max-w-2xl">{{selected.description}}</p>
+                        <h2 class="text-4xl font-extrabold text-white tracking-tight mb-4">{{selected.title}}</h2>
+                        <p class="text-slate-400 text-base leading-relaxed max-w-3xl">{{selected.description}}</p>
 
-                        <div class="mt-6 flex space-x-4">
+                        <!-- Context Advices -->
+                        <div class="mt-8 grid grid-cols-2 gap-6 max-w-4xl">
                             <div v-if="selected.use_when?.length"
-                                class="flex-1 bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-lg">
-                                <span class="text-[10px] font-bold text-emerald-500 uppercase block mb-1">Use
-                                    When</span>
-                                <ul class="text-[11px] text-gray-400 list-disc ml-4">
-                                    <li v-for="u in selected.use_when">{{u}}</li>
+                                class="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+                                <div class="flex items-center space-x-2 mb-3">
+                                    <i class="fa-solid fa-circle-check text-emerald-500 text-xs"></i>
+                                    <span
+                                        class="text-[11px] font-extrabold text-emerald-500 uppercase tracking-widest">Ideal
+                                        For</span>
+                                </div>
+                                <ul class="space-y-2">
+                                    <li v-for="u in selected.use_when" class="text-xs text-slate-400 flex items-start">
+                                        <span class="mr-2 text-emerald-500/50 mt-1">•</span>{{u}}
+                                    </li>
                                 </ul>
                             </div>
                             <div v-if="selected.avoid_when?.length"
-                                class="flex-1 bg-rose-500/5 border border-rose-500/10 p-3 rounded-lg">
-                                <span class="text-[10px] font-bold text-rose-500 uppercase block mb-1">Avoid When</span>
-                                <ul class="text-[11px] text-gray-400 list-disc ml-4">
-                                    <li v-for="a in selected.avoid_when">{{a}}</li>
+                                class="p-5 rounded-2xl bg-rose-500/5 border border-rose-500/10">
+                                <div class="flex items-center space-x-2 mb-3">
+                                    <i class="fa-solid fa-circle-xmark text-rose-500 text-xs"></i>
+                                    <span
+                                        class="text-[11px] font-extrabold text-rose-500 uppercase tracking-widest">Avoid
+                                        If</span>
+                                </div>
+                                <ul class="space-y-2">
+                                    <li v-for="a in selected.avoid_when"
+                                        class="text-xs text-slate-400 flex items-start">
+                                        <span class="mr-2 text-rose-500/50 mt-1">•</span>{{a}}
+                                    </li>
                                 </ul>
                             </div>
                         </div>
                     </header>
 
-                    <div class="flex-1 overflow-y-auto p-8 space-y-8 scrollbar-hide">
-                        <div v-for="field in selected.fields" :key="field.id" class="max-w-2xl">
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
-                                {{field.label}} <span v-if="field.required" class="text-rose-500">*</span>
-                            </label>
-
-                            <!-- Input Types -->
-                            <div v-if="field.type === 'textarea'">
-                                <textarea v-model="form[field.id]" :placeholder="field.placeholder" rows="3"
-                                    :class="['w-full bg-slate-900 border border-white/10 rounded-lg p-3 text-sm focus:border-indigo-500 outline-none transition-all', errors[field.id] ? 'error-ring' : '']"></textarea>
-                            </div>
-                            <div v-else-if="field.type === 'select'">
-                                <select v-model="form[field.id]"
-                                    :class="['w-full bg-slate-900 border border-white/10 rounded-lg p-3 text-sm focus:border-indigo-500 outline-none transition-all', errors[field.id] ? 'error-ring' : '']">
-                                    <option v-for="opt in field.options" :key="opt" :value="opt">{{opt}}</option>
-                                </select>
-                            </div>
-                            <div v-else-if="field.type === 'list'">
-                                <div class="flex space-x-2 mb-2">
-                                    <input type="text" v-model="tempInput[field.id]" @keyup.enter="addToList(field.id)"
-                                        :placeholder="field.placeholder || 'Type and press Enter'"
-                                        :class="['flex-1 bg-slate-900 border border-white/10 rounded-lg p-2 text-sm focus:border-indigo-500 outline-none transition-all', errors[field.id] ? 'error-ring' : '']">
-                                    <button @click="addToList(field.id)"
-                                        class="px-4 bg-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-500">Add</button>
-                                </div>
-                                <div class="flex flex-wrap gap-2">
-                                    <span v-for="(item, idx) in listData[field.id]" :key="idx"
-                                        class="bg-slate-800 text-[10px] px-2 py-1 rounded flex items-center border border-white/5 shadow-sm">
-                                        {{item}} <i @click="removeFromList(field.id, idx)"
-                                            class="fa-solid fa-times ml-2 cursor-pointer text-gray-500 hover:text-rose-400"></i>
-                                    </span>
-                                </div>
-                            </div>
-                            <div v-else-if="field.type === 'checkbox'">
-                                <label class="flex items-center space-x-3 cursor-pointer group">
-                                    <input type="checkbox" v-model="form[field.id]"
-                                        class="w-4 h-4 bg-slate-900 checked:bg-indigo-500 border-white/10 rounded">
-                                    <span class="text-sm text-gray-400 group-hover:text-gray-200">{{field.label}}
-                                        enabled</span>
+                    <!-- Scrollable Form Fields -->
+                    <div class="flex-1 overflow-y-auto p-10 space-y-10 scrollbar-hide">
+                        <div v-for="field in selected.fields" :key="field.id" class="max-w-3xl">
+                            <div class="flex items-center justify-between mb-3 px-1">
+                                <label class="text-[11px] font-extrabold text-slate-500 uppercase tracking-[2px]">
+                                    {{field.label}} <span v-if="field.required" class="text-rose-500 ml-1">*</span>
                                 </label>
+                                <span v-if="form[field.id] && field.type !== 'list'"
+                                    class="text-[10px] text-indigo-400 font-black"><i
+                                        class="fa-solid fa-check"></i></span>
                             </div>
-                            <div v-else>
-                                <input type="text" v-model="form[field.id]" :placeholder="field.placeholder"
-                                    :class="['w-full bg-slate-900 border border-white/10 rounded-lg p-3 text-sm focus:border-indigo-500 outline-none transition-all', errors[field.id] ? 'error-ring' : '']">
+
+                            <!-- Input Renderers -->
+                            <div class="group">
+                                <div v-if="field.type === 'textarea'" class="relative">
+                                    <textarea v-model="form[field.id]" :placeholder="field.placeholder" rows="3"
+                                        :class="['w-full bg-slate-900/50 border border-white/10 rounded-2xl p-4 text-[14px] leading-relaxed focus:bg-slate-900 outline-none transition-all input-glow', errors[field.id] ? 'border-rose-500/50' : 'group-hover:border-white/20']"></textarea>
+                                </div>
+
+                                <div v-else-if="field.type === 'select'" class="relative">
+                                    <select v-model="form[field.id]"
+                                        :class="['w-full bg-slate-900/50 border border-white/10 rounded-2xl p-4 text-[14px] appearance-none focus:bg-slate-900 outline-none transition-all input-glow', errors[field.id] ? 'border-rose-500/50' : 'group-hover:border-white/20']">
+                                        <option v-for="opt in field.options" :key="opt" :value="opt">{{opt}}</option>
+                                    </select>
+                                    <i
+                                        class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none text-xs"></i>
+                                </div>
+
+                                <div v-else-if="field.type === 'list'" class="space-y-4">
+                                    <div class="flex space-x-3">
+                                        <input type="text" v-model="tempInput[field.id]"
+                                            @keyup.enter="addToList(field.id)"
+                                            :placeholder="field.placeholder || 'Add item & press Enter...'"
+                                            :class="['flex-1 bg-slate-900/50 border border-white/10 rounded-2xl px-5 py-3 text-[14px] focus:bg-slate-900 outline-none transition-all input-glow', errors[field.id] ? 'border-rose-500/50' : 'group-hover:border-white/20']">
+                                        <button @click="addToList(field.id)"
+                                            class="px-6 rounded-2xl bg-slate-800 text-xs font-extrabold text-slate-300 hover:bg-slate-700 hover:text-white transition-all border border-white/5">ADD</button>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2 pt-1">
+                                        <span v-for="(item, idx) in listData[field.id]" :key="idx"
+                                            class="bg-indigo-500/10 text-indigo-300 text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center border border-indigo-500/20 group animate-in fade-in zoom-in duration-300">
+                                            {{item}}
+                                            <i @click="removeFromList(field.id, idx)"
+                                                class="fa-solid fa-xmark ml-2 cursor-pointer text-indigo-500/50 hover:text-rose-400 transition-colors"></i>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div v-else-if="field.type === 'checkbox'" class="flex">
+                                    <label class="flex items-center space-x-4 cursor-pointer py-2 group/check">
+                                        <div class="relative flex items-center">
+                                            <input type="checkbox" v-model="form[field.id]" class="peer sr-only">
+                                            <div
+                                                class="w-12 h-6 bg-slate-800 rounded-full peer-checked:bg-indigo-600 transition-all border border-white/5">
+                                            </div>
+                                            <div
+                                                class="absolute left-1 top-1 w-4 h-4 bg-slate-400 rounded-full peer-checked:translate-x-6 peer-checked:bg-white transition-all shadow-lg">
+                                            </div>
+                                        </div>
+                                        <span
+                                            class="text-sm text-slate-400 group-hover/check:text-slate-200 transition-colors">{{field.label}}
+                                            enabled</span>
+                                    </label>
+                                </div>
+
+                                <input v-else type="text" v-model="form[field.id]" :placeholder="field.placeholder"
+                                    :class="['w-full bg-slate-900/50 border border-white/10 rounded-2xl p-4 text-[14px] focus:bg-slate-900 outline-none transition-all input-glow', errors[field.id] ? 'border-rose-500/50' : 'group-hover:border-white/20']">
                             </div>
                         </div>
                     </div>
@@ -206,32 +301,55 @@
             </Transition>
         </main>
 
-        <!-- Preview -->
-        <aside class="w-[500px] bg-[#0f172a] border-l border-white/5 flex flex-col shrink-0">
-            <div class="p-6 border-b border-white/5 flex justify-between items-center">
-                <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Real-time Prompt</span>
+        <!-- Preview Panel -->
+        <aside class="w-[550px] glass-panel border-l bg-slate-950/80 flex flex-col shrink-0 relative overflow-hidden">
+            <!-- Glass Background -->
+            <div
+                class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-indigo-500/5 blur-[80px] rounded-full pointer-events-none">
+            </div>
+
+            <div
+                class="p-8 border-b border-white/5 flex justify-between items-center bg-slate-950/50 relative z-10 backdrop-blur-md">
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-[2px] mb-1">Generated
+                        Output</span>
+                    <span class="text-[12px] text-indigo-400 font-mono">{{generated.length}} chars</span>
+                </div>
+
                 <button v-if="selected" @click="copy"
-                    :class="['px-4 py-2 rounded-lg text-xs font-black transition-all flex items-center', 
-                            Object.keys(errors).some(k => errors[k]) ? 'shake bg-rose-600 text-white' : (copied ? 'bg-emerald-500 text-white shadow-emerald-500/20 shadow-lg' : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20')]">
-                    <i v-if="Object.keys(errors).some(k => errors[k])"
-                        class="fa-solid fa-triangle-exclamation mr-2"></i>
-                    {{Object.keys(errors).some(k => errors[k]) ? 'MISSING FIELDS' : (copied ? 'COPIED!' : 'COPY CLEAN
-                    PROMPT')}}
+                    :class="['group relative px-6 py-3 rounded-2xl text-[11px] font-extrabold transition-all duration-500 flex items-center overflow-hidden', hasErrors ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : (copied ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/20' : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl shadow-indigo-600/30 btn-pulse')]">
+                    <div class="flex items-center relative z-10">
+                        <i v-if="hasErrors" class="fa-solid fa-triangle-exclamation mr-2 animate-bounce"></i>
+                        <i v-else-if="copied" class="fa-solid fa-check-double mr-2"></i>
+                        <i v-else class="fa-solid fa-copy mr-2 group-hover:scale-110 transition-transform"></i>
+                        {{copyBtnText}}
+                    </div>
                 </button>
             </div>
-            <div
-                class="flex-1 p-8 overflow-y-auto bg-slate-950 font-mono text-[13px] leading-loose text-indigo-100/70 scrollbar-hide">
-                <div v-if="selected" class="whitespace-pre-wrap">{{generated}}</div>
-                <div v-else class="h-full flex items-center justify-center text-gray-700 italic">Generate your sequence
-                    here...</div>
+
+            <!-- Code Content Area -->
+            <div class="flex-1 p-10 overflow-y-auto bg-transparent relative z-10 custom-scroll scrollbar-hide">
+                <div v-if="selected"
+                    class="font-mono text-sm leading-relaxed text-slate-100/80 whitespace-pre-wrap selection:bg-indigo-500/40">
+                    <div
+                        class="bg-indigo-500/5 rounded-2xl p-6 border border-indigo-500/10 shadow-inner min-h-full transition-all duration-700">
+                        {{generated}}
+                    </div>
+                </div>
+                <div v-else
+                    class="h-full flex flex-col items-center justify-center text-slate-600 font-mono text-sm space-y-4 opacity-50">
+                    <div class="w-16 h-1 bg-slate-800 rounded-full"></div>
+                    <p class="italic tracking-widest text-[10px] uppercase">Awaiting input data</p>
+                    <div class="w-8 h-1 bg-slate-800 rounded-full"></div>
+                </div>
             </div>
         </aside>
     </div>
 
-    <!-- 1. Start Registry Initializer -->
+    <!-- Initialization scripts -->
     <script src="data.js"></script>
 
-    <!-- 2. Load Modular Templates -->
+    <!-- Templates -->
     <script src="templates/understand.js"></script>
     <script src="templates/debug.js"></script>
     <script src="templates/review.js"></script>
@@ -241,13 +359,12 @@
     <script src="templates/refactor.js"></script>
     <script src="templates/handoff.js"></script>
 
-    <!-- 3. Final App Logic -->
+    <!-- App Logic -->
     <script>
         const { createApp, ref, computed, onMounted } = Vue;
 
         createApp({
             setup() {
-                // Initialize from the global window.promptRegistry populated by scripts above
                 const templates = ref([]);
                 const categories = ['Understand', 'Debug', 'Review', 'Refactor', 'Design', 'Test', 'Handoff', 'Incident'];
                 const searchQuery = ref('');
@@ -259,7 +376,6 @@
                 const errors = ref({});
 
                 onMounted(() => {
-                    // This ensures all scripts have loaded before assigning to ref
                     templates.value = window.promptRegistry || [];
                 });
 
@@ -268,13 +384,9 @@
                     return templates.value.filter(t => {
                         if (t.category !== cat) return false;
                         if (!q) return true;
-
-                        const inTitle = t.title.toLowerCase().includes(q);
-                        const inTags = t.tags?.some(tag => tag.toLowerCase().includes(q));
-                        const inUse = t.use_when?.some(u => u.toLowerCase().includes(q));
-                        const inDesc = t.description?.toLowerCase().includes(q);
-                        const inFields = t.fields?.some(f => f.label.toLowerCase().includes(q));
-                        return inTitle || inTags || inUse || inDesc || inFields;
+                        return t.title.toLowerCase().includes(q) ||
+                            t.tags?.some(tag => tag.toLowerCase().includes(q)) ||
+                            t.description?.toLowerCase().includes(q);
                     });
                 };
 
@@ -292,7 +404,7 @@
                 };
 
                 const addToList = (id) => {
-                    const val = tempInput.value[id];
+                    const val = tempInput.value[id]?.trim();
                     if (val) {
                         listData.value[id].push(val);
                         tempInput.value[id] = '';
@@ -306,9 +418,8 @@
 
                 const generated = computed(() => {
                     if (!selected.value) return '';
-                    let tempTemplate = selected.value.template;
+                    let textContent = selected.value.template;
 
-                    // Resolve Values
                     const values = {};
                     selected.value.fields?.forEach(f => {
                         let value = form.value[f.id];
@@ -319,33 +430,26 @@
                         values[f.id] = (value === undefined || (typeof value === 'string' && value.trim() === '')) ? null : value;
                     });
 
-                    // Advanced Multi-Pass Cleanup
-                    let textContent = tempTemplate;
-
                     selected.value.fields?.forEach(f => {
                         const key = f.id;
                         const val = values[key];
 
                         if (val === null) {
-                            // 1. Remove Label + Placeholder block (e.g. "Label:\n- {{var}}")
                             const blockRegex = new RegExp(`(?:^|\\n)[^\\n]+:\\s*\\n[ \\t\\-\\*]*{{${key}}}[^\\n]*(?=\\n|$)`, 'g');
                             textContent = textContent.replace(blockRegex, '');
-
-                            // 2. Remove inline or standalone placeholder line (e.g. "- Label: {{var}}")
                             const lineRegex = new RegExp(`(?:^|\\n)[^\\n]*{{${key}}}[^\\n]*(?=\\n|$)`, 'g');
                             textContent = textContent.replace(lineRegex, '');
                         } else {
-                            // Replace variable
                             textContent = textContent.split(`{{${key}}}`).join(val);
                         }
                     });
 
-                    // Remove empty code fences
                     textContent = textContent.replace(/```[a-z]*\s*```/gs, '');
-
-                    // Collapse redundant whitespace
                     return textContent.replace(/\n\n\n+/g, '\n\n').trim();
                 });
+
+                const hasErrors = computed(() => Object.keys(errors.value).some(k => errors.value[k]));
+                const copyBtnText = computed(() => hasErrors.value ? 'REMAINING FIELDS' : (copied.value ? 'COPIED TO CLIPBOARD' : 'COPY PROMPT'));
 
                 const validate = () => {
                     errors.value = {};
@@ -367,7 +471,6 @@
 
                 const copy = async () => {
                     if (!validate()) return;
-
                     try {
                         const content = generated.value;
                         if (navigator.clipboard) {
@@ -387,7 +490,8 @@
 
                 return {
                     categories, templates, searchQuery, selected, form, listData, tempInput, errors,
-                    filteredTemplates, selectTemplate, addToList, removeFromList, generated, copy, copied
+                    filteredTemplates, selectTemplate, addToList, removeFromList, generated, copy, copied,
+                    hasErrors, copyBtnText
                 };
             }
         }).mount('#app');
