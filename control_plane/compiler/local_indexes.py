@@ -47,7 +47,8 @@ def build_task_status_index(repo_root: Path, out_dir: Path) -> Path:
                 "task_id": payload.get("task_id", f.stem),
                 "title": payload.get("title") or payload.get("task_title", ""),
                 "status": payload.get("status", status_default),
-                "assigned_role": payload.get("owner_role") or payload.get("role", ""),
+                "owner_role": payload.get("owner_role") or payload.get("role", ""),
+                "next_owner_role": payload.get("next_owner_role", ""),
                 "source": subdir,
                 "path": str(f.relative_to(repo_root)),
             })

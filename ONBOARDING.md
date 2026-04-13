@@ -61,12 +61,13 @@ Examples:
 Read in this order:
 
 1. `DASHBOARD.md`
-2. `OPERATING_RULES.md`
-3. `CTO_PRODUCT_WORKFLOW.md` only when the task needs Product/CTO leadership context
-4. `manifest.yaml`
-5. `ROLE_SKILL_MATRIX.md`
-6. your persona file from `manifest.yaml`, if present
-7. only the skills relevant to the current task
+2. `runtime/cache/indexes/project_snapshot_index.json` (quick summary of tasks, handoffs, reports — no full file scan needed)
+3. `OPERATING_RULES.md`
+4. `CTO_PRODUCT_WORKFLOW.md` only when the task needs Product/CTO leadership context
+5. `manifest.yaml`
+6. `ROLE_SKILL_MATRIX.md`
+7. your persona file from `manifest.yaml`, if present
+8. only the skills relevant to the current task
 
 Do not read every skill upfront.
 
