@@ -11,6 +11,7 @@ from control_plane.compiler.compile_docs import compile_docs
 from control_plane.compiler.compile_roles import compile_roles
 from control_plane.compiler.compile_skills import compile_skills
 from control_plane.compiler.dashboard_snapshot import build_dashboard_snapshot
+from control_plane.compiler.local_indexes import build_local_indexes
 from control_plane.contracts import DEFAULT_CONTRACT_VALIDATOR
 
 
@@ -156,8 +157,9 @@ def build_all(repo_root: Path, include_pool: bool = False) -> dict[str, str]:
 
     results: dict[str, str] = {}
     errors: list[str] = []
+    total_steps = 6
 
-    print("\n[1/5] Compiling roles from manifest.yaml ...")
+    print(f"\n[1/{total_steps}] Compiling roles from manifest.yaml ...")
     try:
         role_path = compile_roles(repo_root)
         results["role_index"] = str(role_path)
@@ -166,7 +168,7 @@ def build_all(repo_root: Path, include_pool: bool = False) -> dict[str, str]:
         errors.append(f"roles: {exc}")
         print(f"  [FAIL] {exc}")
 
-    print("\n[2/5] Compiling skills from Skills/ ...")
+    print(f"\n[2/{total_steps}] Compiling skills from Skills/ ...")
     try:
         skill_path = compile_skills(repo_root, include_pool=include_pool)
         results["skill_index"] = str(skill_path)
@@ -176,7 +178,7 @@ def build_all(repo_root: Path, include_pool: bool = False) -> dict[str, str]:
         errors.append(f"skills: {exc}")
         print(f"  [FAIL] {exc}")
 
-    print("\n[3/5] Compiling docs ...")
+    print(f"\n[3/{total_steps}] Compiling docs ...")
     try:
         doc_paths = compile_docs(repo_root)
         for path in doc_paths:
@@ -186,7 +188,7 @@ def build_all(repo_root: Path, include_pool: bool = False) -> dict[str, str]:
         errors.append(f"docs: {exc}")
         print(f"  [FAIL] {exc}")
 
-    print("\n[4/5] Building dashboard snapshot ...")
+    print(f"\n[4/{total_steps}] Building dashboard snapshot ...")
     try:
         dashboard_path = build_dashboard_snapshot(repo_root)
         results["dashboard_snapshot"] = str(dashboard_path)
@@ -195,13 +197,23 @@ def build_all(repo_root: Path, include_pool: bool = False) -> dict[str, str]:
         errors.append(f"dashboard_snapshot: {exc}")
         print(f"  [FAIL] {exc}")
 
-    print("\n[5/5] Building module index ...")
+    print(f"\n[5/{total_steps}] Building module index ...")
     try:
         module_path = build_module_index(repo_root)
         results["module_index"] = str(module_path)
         print(f"  [OK] {module_path}")
     except Exception as exc:
         errors.append(f"module_index: {exc}")
+        print(f"  [FAIL] {exc}")
+
+    print(f"\n[6/{total_steps}] Building local indexes ...")
+    try:
+        idx_results = build_local_indexes(repo_root)
+        results.update(idx_results)
+        for name, path in idx_results.items():
+            print(f"  [OK] {path}")
+    except Exception as exc:
+        errors.append(f"local_indexes: {exc}")
         print(f"  [FAIL] {exc}")
 
     manifest = {
