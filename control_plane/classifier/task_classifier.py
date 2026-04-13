@@ -24,6 +24,18 @@ _TYPE_KEYWORDS: dict[str, list[str]] = {
     "feature": ["add", "implement", "create", "build", "new", "feature"],
 }
 
+_EXPLICIT_TASK_TYPES = {
+    *list(_TYPE_KEYWORDS.keys()),
+    "planning",
+    "review",
+    "verification",
+    "architecture",
+    "incident",
+    "bugfix_review",
+    "audit",
+    "sprint",
+}
+
 # Keywords that raise risk level
 _HIGH_RISK_KEYWORDS: list[str] = [
     "payment", "security", "auth", "production", "critical", "token",
@@ -73,8 +85,10 @@ class TaskClassifier:
             or task.get("type")
             or task.get("metadata", {}).get("task_type")
         )
-        if explicit in _TYPE_KEYWORDS:
-            return str(explicit)
+        if isinstance(explicit, str):
+            normalized = explicit.strip().lower().replace("-", "_").replace(" ", "_")
+            if normalized in _EXPLICIT_TASK_TYPES:
+                return normalized
 
         for task_type, keywords in _TYPE_KEYWORDS.items():
             if any(self._contains_keyword(text, kw) for kw in keywords):
@@ -90,11 +104,21 @@ class TaskClassifier:
         return "general"
 
     def _detect_risk(self, text: str, task_type: str) -> str:
-        if task_type == "security":
+        if task_type in {"security", "incident"}:
             return "high"
         if any(self._contains_keyword(text, kw) for kw in _HIGH_RISK_KEYWORDS):
             return "high"
-        if task_type in ("refactor", "feature"):
+        if task_type in {
+            "refactor",
+            "feature",
+            "planning",
+            "review",
+            "verification",
+            "architecture",
+            "audit",
+            "bugfix_review",
+            "sprint",
+        }:
             return "medium"
         return "low"
 
@@ -113,6 +137,14 @@ class TaskClassifier:
             roles.append("docs")
         elif task_type == "security":
             roles.extend(["security", "backend"])
+        elif task_type in {"verification", "bugfix_review"}:
+            roles.append("qa")
+        elif task_type == "review":
+            roles.append("reviewer")
+        elif task_type in {"planning", "architecture", "sprint"}:
+            roles.extend(["product", "cto"])
+        elif task_type == "audit":
+            roles.extend(["security", "reviewer"])
         return roles or ["backend"]
 
     def _required_tools(self, task_type: str) -> list[str]:
@@ -123,6 +155,10 @@ class TaskClassifier:
             base.append("test_runner")
         elif task_type == "security":
             base.extend(["security_checker", "code_retriever"])
+        elif task_type in {"planning", "architecture"}:
+            base.extend(["code_retriever"])
+        elif task_type in {"review", "verification", "bugfix_review", "audit"}:
+            base.extend(["code_retriever", "test_runner"])
         return base
 
     def _likely_artifacts(self, task_type: str) -> list[str]:

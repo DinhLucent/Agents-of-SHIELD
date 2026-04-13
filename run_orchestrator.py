@@ -6,6 +6,7 @@ Usage:
     python run_orchestrator.py run <task.yaml>   # Execute a task end-to-end
     python run_orchestrator.py dashboard         # Print CEO progress view
     python run_orchestrator.py audit             # Run serial system audit fixtures
+    python run_orchestrator.py prompt-sandbox    # Run prompt-driven multi-session project flow
     python run_orchestrator.py system-test       # Run automated sandbox scenarios
 """
 from __future__ import annotations
@@ -19,7 +20,7 @@ import yaml
 from control_plane.compiler.build_indexes import build_all
 from control_plane.compiler.dashboard_snapshot import build_dashboard_snapshot
 from control_plane.orchestrator import Orchestrator, OrchestratorConfig
-from control_plane.system_test_runner import run_system_tests
+from control_plane.system_test_runner import run_prompt_sandbox, run_system_tests
 
 
 def _make_config(repo_root: Path) -> OrchestratorConfig:
@@ -173,6 +174,14 @@ def cmd_system_test(repo_root: Path, args: list[str]) -> None:
         sys.exit(1)
 
 
+def cmd_prompt_sandbox(repo_root: Path) -> None:
+    """Run a prompt-driven multi-session sandbox project."""
+    result = run_prompt_sandbox(repo_root)
+    _print_json("SHIELD Prompt Sandbox Result", result)
+    if result["status"] != "passed":
+        sys.exit(1)
+
+
 def _handoff_path_from_done(done_report_path: str | None) -> str | None:
     if not done_report_path:
         return None
@@ -234,6 +243,17 @@ def _validate_role_gate_mismatch(
         failures.append("role_gate_mismatch.yaml: expected blocked step status")
     if first_step.get("commands"):
         failures.append("role_gate_mismatch.yaml: command list should be empty when role gate blocks execution")
+    retry_results = result.get("retry_results", [])
+    if isinstance(retry_results, list) and retry_results:
+        failures.append("role_gate_mismatch.yaml: role gate mismatch should not create retry packets")
+    expected_handoff_to = metadata.get("expected_handoff_to")
+    if expected_handoff_to and handoff_path and Path(handoff_path).exists():
+        handoff_payload = json.loads(Path(handoff_path).read_text(encoding="utf-8"))
+        if handoff_payload.get("to_role") != expected_handoff_to:
+            failures.append(
+                "role_gate_mismatch.yaml: expected handoff to "
+                f"{expected_handoff_to}, got {handoff_payload.get('to_role')}"
+            )
     return failures
 
 
@@ -467,11 +487,13 @@ def main() -> None:
         cmd_audit(repo_root)
     elif args[0] == "dashboard":
         cmd_dashboard(repo_root)
+    elif args[0] == "prompt-sandbox":
+        cmd_prompt_sandbox(repo_root)
     elif args[0] == "system-test":
         cmd_system_test(repo_root, args[1:])
     else:
         print(f"Unknown command: {args[0]}")
-        print("Usage: python run_orchestrator.py [compile|plan [task.yaml]|run [task.yaml]|dashboard|audit|system-test]")
+        print("Usage: python run_orchestrator.py [compile|plan [task.yaml]|run [task.yaml]|dashboard|audit|prompt-sandbox|system-test]")
         sys.exit(1)
 
 

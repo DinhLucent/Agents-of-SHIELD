@@ -28,6 +28,7 @@ class KnowledgeRetriever:
         explicit_files = self._merge_unique([], inputs.get("related_paths", []))
         explicit_tests = self._merge_unique([], inputs.get("related_tests", []))
         handoff_refs = self._merge_unique([], inputs.get("related_handoffs", []))
+        report_refs = self._merge_unique([], inputs.get("related_reports", []))
         modules = self._infer_modules(task, classification, explicit_files)
         small_task = self._is_small_task(task, explicit_files, modules)
 
@@ -50,6 +51,7 @@ class KnowledgeRetriever:
             "files": files,
             "tests": tests,
             "handoffs": handoff_refs,
+            "reports": report_refs,
             "fragments": fragments,
             "dashboard_snapshot": dashboard_snapshot,
             "role": routing["primary_role"],

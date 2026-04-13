@@ -508,29 +508,61 @@ class Orchestrator:
         if final_status != "failed":
             return None
 
-        target_role = verification_report.get("recommended_next_role") or "reviewer"
-        if target_role == execution_mode.get("primary_role"):
-            target_role = "reviewer"
+        handoff_policy = self._failure_handoff_policy(
+            task=task,
+            execution_mode=execution_mode,
+            verification_report=verification_report,
+            execution_results=execution_results,
+        )
 
         return self.on_handoff_hook.run(
             task_id=task["id"],
             from_role=execution_mode.get("primary_role", "backend"),
-            to_role=target_role,
+            to_role=handoff_policy["target_role"],
             from_session=session_id,
             completed=[
                 f"Executed {len(execution_results)} attempt(s).",
                 f"Final verification status: {verification_report.get('status')}.",
             ],
             needs_continuation=self._handoff_needs(verification_report),
-            context=[
+            context=handoff_policy["context"],
+            related_files=self._handoff_related_files(execution_results),
+            open_questions=[],
+            reason=handoff_policy["reason"],
+            recommended_next_step=handoff_policy["recommended_next_step"],
+        )
+
+    def _failure_handoff_policy(
+        self,
+        task: dict[str, Any],
+        execution_mode: dict[str, Any],
+        verification_report: dict[str, Any],
+        execution_results: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        if self._role_gate_blocked(execution_results):
+            assigned_role = task.get("assigned_role") or "reviewer"
+            return {
+                "target_role": assigned_role,
+                "reason": "Role gate blocked execution; the assigned role should continue.",
+                "context": [
+                    "Execution stopped before commands ran because session role did not match task.assigned_role.",
+                    f"Assigned role: {assigned_role}",
+                ],
+                "recommended_next_step": "Assigned role should claim the task, review the packet, and continue execution.",
+            }
+
+        target_role = verification_report.get("recommended_next_role") or "reviewer"
+        if target_role == execution_mode.get("primary_role"):
+            target_role = "reviewer"
+        return {
+            "target_role": target_role,
+            "reason": "Verification failed after retry budget; another role should continue.",
+            "context": [
                 f"Verification failed: {verification_report.get('status')}",
                 f"Recommended next role: {target_role}",
             ],
-            related_files=self._handoff_related_files(execution_results),
-            open_questions=[],
-            reason="Verification failed after retry budget; another role should continue.",
-            recommended_next_step="Review the verification report, latest execution report, and retry packets before patching.",
-        )
+            "recommended_next_step": "Review the verification report, latest execution report, and retry packets before patching.",
+        }
 
     def _handoff_needs(self, verification_report: dict[str, Any]) -> list[str]:
         needs = list(verification_report.get("next_context_needs", []))
@@ -550,6 +582,16 @@ class Orchestrator:
                 if file_path not in files:
                     files.append(file_path)
         return files
+
+    def _role_gate_blocked(self, execution_results: list[dict[str, Any]]) -> bool:
+        for result in execution_results:
+            for step in result.get("step_results", []):
+                if step.get("status") != "blocked":
+                    continue
+                details = str(step.get("details", ""))
+                if "Role gate blocked execution" in details:
+                    return True
+        return False
 
     def _verification_report_path(self, task_id: str) -> Path:
         return self.config.runtime_dir / "state" / "verification_reports" / f"{task_id}.verification.json"

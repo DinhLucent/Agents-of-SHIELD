@@ -27,6 +27,7 @@
         "related_paths": { "type": "array", "items": { "type": "string" } },
         "related_tests": { "type": "array", "items": { "type": "string" } },
         "related_handoffs": { "type": "array", "items": { "type": "string" } },
+        "related_reports": { "type": "array", "items": { "type": "string" } },
         "related_logs": { "type": "array", "items": { "type": "string" } },
         "related_modules": { "type": "array", "items": { "type": "string" } }
       }

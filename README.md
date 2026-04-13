@@ -72,6 +72,7 @@ python run_orchestrator.py plan path/to/task.yaml
 python run_orchestrator.py run path/to/task.yaml
 python run_orchestrator.py dashboard
 python run_orchestrator.py audit
+python run_orchestrator.py prompt-sandbox
 python run_orchestrator.py system-test --iterations 1
 ```
 
@@ -83,7 +84,9 @@ python run_orchestrator.py system-test --iterations 1
 
 `audit` runs the serial health check: compile, collaboration template validation, task planning, happy path, retry path, and hard-fail handoff path.
 
-`system-test` copies SHIELD into a fresh sandbox and runs zero-build, improve, and fix-with-retry scenarios end-to-end.
+`prompt-sandbox` runs a prompt-driven multi-session project flow: Product -> CTO -> Frontend -> QA.
+
+`system-test` copies SHIELD into a fresh sandbox and runs zero-build, improve, fix-with-retry, and prompt-driven multi-session scenarios end-to-end.
 
 ## Core Artifacts
 
@@ -137,6 +140,7 @@ python run_orchestrator.py audit
 For a stronger sandbox check after changing orchestration, classifier, router, templates, or collaboration flow:
 
 ```bash
+python run_orchestrator.py prompt-sandbox
 python run_orchestrator.py system-test --iterations 1
 ```
 

@@ -124,7 +124,10 @@ class PostTaskHook:
                 "verification report",
             ],
             "related_handoffs": inputs.get("related_handoffs", []),
-            "related_reports": agent_output.get("related_reports", []),
+            "related_reports": [
+                *inputs.get("related_reports", []),
+                *agent_output.get("related_reports", []),
+            ],
             "task_already_done_checked": True,
         }
 

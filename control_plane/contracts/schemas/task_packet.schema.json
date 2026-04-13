@@ -25,6 +25,7 @@
     "files",
     "tests",
     "handoff_refs",
+    "report_refs",
     "memory_refs",
     "verification_plan",
     "expected_outputs",
@@ -89,11 +90,13 @@
     },
     "context_check": {
       "type": "object",
-      "required": ["must_read_before_work", "task_handoff_refs", "packet_handoff_refs", "rule"],
+      "required": ["must_read_before_work", "task_handoff_refs", "packet_handoff_refs", "task_report_refs", "packet_report_refs", "rule"],
       "properties": {
         "must_read_before_work": { "type": "array", "items": { "type": "string" } },
         "task_handoff_refs": { "type": "array", "items": { "type": "string" } },
         "packet_handoff_refs": { "type": "array" },
+        "task_report_refs": { "type": "array", "items": { "type": "string" } },
+        "packet_report_refs": { "type": "array", "items": { "type": "string" } },
         "rule": { "type": "string" }
       }
     },
@@ -123,6 +126,7 @@
     "files": { "type": "array", "items": { "type": "string" } },
     "tests": { "type": "array", "items": { "type": "string" } },
     "handoff_refs": { "type": "array", "items": { "type": "string" } },
+    "report_refs": { "type": "array", "items": { "type": "string" } },
     "memory_refs": { "type": "array", "items": { "type": "string" } },
     "verification_plan": { "type": "array", "items": { "type": "string" } },
     "expected_outputs": { "type": "array", "items": { "type": "string" } },

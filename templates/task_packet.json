@@ -73,6 +73,8 @@
     ],
     "task_handoff_refs": [],
     "packet_handoff_refs": [],
+    "task_report_refs": [],
+    "packet_report_refs": [],
     "rule": "If a done report already exists for this task, do not redo work without a new task or retry request."
   },
   "reporting_requirements": {
@@ -126,6 +128,7 @@
   ],
   "tests": [],
   "handoff_refs": [],
+  "report_refs": [],
   "memory_refs": [],
   "verification_plan": [
     "lint changed files",

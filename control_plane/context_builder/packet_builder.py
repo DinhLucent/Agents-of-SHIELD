@@ -64,6 +64,7 @@ class PacketBuilder:
             "files": context_bundle.get("files", []),
             "tests": context_bundle.get("tests", []),
             "handoff_refs": context_bundle.get("handoffs", []),
+            "report_refs": context_bundle.get("reports", []),
             "memory_refs": [],
             "verification_plan": self._build_verification_plan(
                 execution_mode["primary_role"], classification["risk_level"]
@@ -117,6 +118,8 @@ class PacketBuilder:
             ],
             "task_handoff_refs": task.get("inputs", {}).get("related_handoffs", []),
             "packet_handoff_refs": context_bundle.get("handoffs", []),
+            "task_report_refs": task.get("inputs", {}).get("related_reports", []),
+            "packet_report_refs": context_bundle.get("reports", []),
             "rule": "If a done report already exists for this task, do not redo work without a new task or retry request.",
         }
 

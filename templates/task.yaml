@@ -16,6 +16,7 @@ inputs:
     - control_plane/hooks/on_verification_fail.py
   related_tests: []
   related_handoffs: []
+  related_reports: []
   related_logs: []
   related_modules:
     - control_plane/hooks

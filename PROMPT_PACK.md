@@ -726,11 +726,12 @@ INPUTS:
 
 Please:
 1. run or request `python run_orchestrator.py audit`
-2. run or request `python run_orchestrator.py system-test --iterations 1`
-3. inspect whether zero-build, improve, and solve-issue/retry flows pass
-4. verify `.hub/done/`, session reports, quick reports, metrics, and system test report exist
-5. if a failure appears, patch the smallest kernel/docs/template issue and rerun
-6. end with pass / pass with smell / fail, evidence, and remaining risks
+2. run or request `python run_orchestrator.py prompt-sandbox`
+3. run or request `python run_orchestrator.py system-test --iterations 1`
+4. inspect whether zero-build, improve, solve-issue/retry, and Product -> CTO -> Frontend -> QA prompt-driven flows pass
+5. verify `.hub/done/`, session reports, quick reports, metrics, and system test report exist
+6. if a failure appears, patch the smallest kernel/docs/template issue and rerun
+7. end with pass / pass with smell / fail, evidence, and remaining risks
 
 Do not expand architecture during validation.
 ```
