@@ -5,6 +5,7 @@ or release sensitivity demands it.
 """
 from __future__ import annotations
 
+import re
 from typing import Any
 
 
@@ -27,12 +28,13 @@ class ParallelPolicy:
         related_paths = task.get("inputs", {}).get("related_paths", [])
 
         multi_module = len({self._top_level_group(p) for p in related_paths if p}) > 1
-        mentions_security = any(
-            word in description for word in ["security", "auth", "permission", "token"]
+        mentions_security = self._mentions_any(
+            description, ["security", "auth", "permission", "token"]
         )
-        mentions_release = any(
-            word in description for word in ["release", "deploy", "production", "rollout"]
+        mentions_release = self._mentions_any(
+            description, ["release", "deploy", "production", "rollout"]
         )
+        many_constraints = len(constraints) >= 4 and risk_level in {"medium", "high"}
 
         # ── Directed swarm: release or high-risk multi-module ────
         if mentions_release or (risk_level == "high" and multi_module):
@@ -51,7 +53,7 @@ class ParallelPolicy:
             risk_level == "high"
             or mentions_security
             or task_type in {"refactor", "incident"}
-            or len(constraints) >= 3
+            or many_constraints
         ):
             return {
                 "mode": "paired",
@@ -82,9 +84,18 @@ class ParallelPolicy:
 
     def _top_level_group(self, path: str) -> str:
         parts = [p for p in path.split("/") if p]
-        if len(parts) >= 2:
+        if len(parts) >= 2 and parts[0] == "control_plane":
             return "/".join(parts[:2])
+        if parts:
+            return parts[0]
         return path
+
+    def _mentions_any(self, text: str, terms: list[str]) -> bool:
+        for term in terms:
+            pattern = r"(?<![a-z0-9_-])" + re.escape(term.lower()) + r"(?![a-z0-9_-])"
+            if re.search(pattern, text):
+                return True
+        return False
 
     # Legacy compat — old code calls evaluate()
     def evaluate(self, classification: dict[str, Any], routing: dict[str, Any]) -> dict[str, Any]:

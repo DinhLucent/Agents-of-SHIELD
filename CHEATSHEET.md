@@ -1,206 +1,139 @@
 # CHEATSHEET
 
-Mở file này khi bạn không biết bắt đầu từ đâu.
+Open this when you do not know what to do next.
 
-## Bắt đầu nhanh trong 60 giây
+This is a quick guide, not the canonical process.
+
+If anything here conflicts with `OPERATING_RULES.md`, follow `OPERATING_RULES.md`.
+
+## Default SHIELD Flow
+
+```text
+User -> Product + CTO -> Task -> Worker -> QA/Reviewer -> Product + CTO -> Dashboard
+```
+
+Workers should not start from vague user intent.
+
+Product and CTO turn intent into tasks first.
+
+## First 60 Seconds
+
+1. Open `DASHBOARD.md`.
+2. Read `ONBOARDING.md`.
+3. Identify your role.
+4. Identify the scenario:
+   - `zero build`
+   - `improve repo`
+   - `solve issue`
+   - `assigned task`
+5. Read only the relevant task/report/handoff.
+6. Work.
+7. End with report or handoff.
+
+## Which Session To Open
+
+| Situation | Open this role first |
+|---|---|
+| Idea from zero | `product-manager-agent`, then `cto-agent` |
+| Improve a cloned repo | `product-manager-agent`, then `cto-agent` if architecture impact exists |
+| Fix a bug or issue | `qa-lead-agent` for impact triage, then worker role |
+| Architecture concern | `cto-agent` |
+| Backend/API/data change | `backend-agent` after task exists |
+| UI/component/page change | `frontend-agent` after task exists |
+| Cross-layer feature | `fullstack-agent` after task exists |
+| Verify or release check | `qa-lead-agent` |
+| Security concern | `security-agent` |
+
+If unsure, open `product-manager-agent`.
+
+## Copy-Paste Session Start
+
+```text
+Onboard into this repo as [role].
+Read ONBOARDING.md, DASHBOARD.md, OPERATING_RULES.md, CTO_PRODUCT_WORKFLOW.md when leadership context is needed, manifest.yaml, and ROLE_SKILL_MATRIX.md.
+Use manifest.yaml plus ROLE_SKILL_MATRIX.md to confirm my role/persona/skills.
+
+Scenario: [zero build / improve repo / solve issue / assigned task]
+Task or intent: [paste]
+
+Stay inside my role.
+End with a session report or handoff.
+```
+
+## Zero Build
+
+Use `PROMPT_PACK.md` scenario 1.
+
+Short version: Product brief first, CTO decomposition second, worker tasks third, QA last.
+
+## Improve Existing Repo
+
+Use `PROMPT_PACK.md` scenario 2.
+
+Short version: Product frames value, CTO maps impact when needed, workers handle scoped tasks, QA/reviewer verifies.
+
+## Solve Issue
+
+Use `PROMPT_PACK.md` scenario 3.
+
+Short version: clarify impact/repro, assign a focused fix task, verify the original issue and nearby regression risk.
+
+## Runtime Commands
+
+Use these when a task is already structured and executable.
 
 ```bash
 python run_orchestrator.py compile
 python run_orchestrator.py plan path/to/task.yaml
 python run_orchestrator.py run path/to/task.yaml
+python run_orchestrator.py dashboard
+python run_orchestrator.py audit
+python run_orchestrator.py system-test --iterations 1
 ```
 
-Thứ tự đúng là:
+`plan` checks routing and packet shape.
 
-1. `compile`
-2. viết task
-3. `plan`
-4. `run`
-5. đọc artifacts
+`run` executes, verifies, retries, and finalizes.
 
----
+`dashboard` shows the current CEO/operator view from `.hub/` and `runtime/reports/`.
 
-## Nếu bạn là người mới hoàn toàn
+`audit` checks compile, collaboration templates, plan, happy path, retry path, and hard-fail handoff.
 
-Hãy làm đúng 4 việc này:
+`system-test` creates a fresh sandbox and runs zero-build, improve, and fix/retry scenarios.
 
-1. Copy [templates/task.yaml](templates/task.yaml).
-2. Điền `inputs.related_paths` và `acceptance_criteria`.
-3. Thêm `metadata.execution.primary_commands`.
-4. Chạy `plan` trước, `run` sau.
+## Artifacts To Read
 
-Nếu task không có `metadata.execution`, runtime có thể build packet được nhưng execution sẽ không làm việc hữu ích.
+| Need | Read |
+|---|---|
+| Overall status | `DASHBOARD.md` |
+| Live CEO/operator view | `python run_orchestrator.py dashboard` |
+| How sessions work | `ONBOARDING.md` |
+| Shared process for every session | `OPERATING_RULES.md` |
+| Role curriculum | `ROLE_SKILL_MATRIX.md` |
+| Leadership flow | `CTO_PRODUCT_WORKFLOW.md` |
+| Executed task output | `.hub/done/` |
+| Active task state | `.hub/active/` |
+| Transfer context | `.hub/handoffs/` |
+| Detailed session reports | `runtime/reports/session_reports/` |
+| Quick session reports | `runtime/reports/quick_reports/` |
+| Runtime packets | `runtime/state/task_packets/` |
+| Verification | `runtime/state/verification_reports/` |
+| Sandbox validation reports | `runtime/reports/system_tests/` |
 
----
+## Never Skip
 
-## Mẫu task ngắn nhất để smoke test
+- Role resolution
+- Role gate: session role must match task `assigned_role`
+- Shared protocol in `OPERATING_RULES.md`
+- Task ownership check
+- Latest relevant report/handoff check
+- Acceptance criteria
+- Required output template
+- Verification
+- Session report or handoff with `handoff_needed`, `next_owner_role`, and `next_step`
 
-```yaml
-schema_version: "2.1"
-id: TASK-SMOKE-001
-title: Create proof file
-description: Create a small proof file to validate the execution loop.
-assigned_role: backend
-priority: medium
-status: queued
-domain: general
-
-inputs:
-  related_paths:
-    - control_plane/orchestrator.py
-  related_tests: []
-  related_handoffs: []
-  related_logs: []
-  related_modules:
-    - control_plane
-
-constraints:
-  - keep_packet_small
-
-acceptance_criteria:
-  - proof file created
-
-metadata:
-  created_by: user
-  created_at: "2026-04-12T00:00:00Z"
-  execution:
-    primary_commands:
-      - "New-Item -ItemType Directory -Force -Path 'runtime\\sessions' | Out-Null"
-      - "Set-Content -Path 'runtime\\sessions\\proof.txt' -Value 'ok' -Encoding utf8"
-    output_files:
-      - runtime/sessions/proof.txt
-```
-
----
-
-## `plan` dùng khi nào?
-
-Dùng `plan` khi bạn muốn kiểm:
-
-- classifier có đúng không
-- role/routing có đúng không
-- packet có gọn không
-- `execution_mode` là gì
-
-`plan` không execute command.
-
----
-
-## `run` dùng khi nào?
-
-Dùng `run` khi bạn muốn:
-
-- execute task thật
-- chạy verifier
-- tự retry nếu verify fail
-- sinh state và reports đầy đủ
-
----
-
-## Xem kết quả ở đâu?
-
-### Packet
+## One-Line Reminder
 
 ```text
-runtime/state/task_packets/
-```
-
-### Execution reports
-
-```text
-runtime/state/agent_runs/
-```
-
-### Verification reports
-
-```text
-runtime/state/verification_reports/
-```
-
-### Metrics
-
-```text
-runtime/reports/metrics/
-```
-
-### Final task reports
-
-```text
-.hub/done/
-```
-
-### Failure escalations / handoffs
-
-```text
-.hub/handoffs/
-```
-
----
-
-## Khi nào biết task đã chạy ổn?
-
-Bạn muốn thấy tối thiểu:
-
-- `summary.agent_status = completed`
-- `verification_report.status = passed`
-- `retry_count = 0` cho happy path
-- output file hoặc changed file đúng như mong đợi
-
----
-
-## Khi verify fail thì làm gì?
-
-Đừng sửa bừa ngay. Hãy xem:
-
-1. `runtime/state/verification_reports/<TASK>.verification.json`
-2. `next_context_needs`
-3. `runtime/state/task_packets/<TASK>.retry-1.json`
-4. `runtime/reports/metrics/<TASK>.metrics.json`
-
-Nếu retry packet vẫn quá to hoặc sai trọng tâm, task contract hoặc retriever vẫn cần siết.
-
----
-
-## 5 lỗi thường gặp
-
-### 1. `run` không làm gì hữu ích
-
-Nguyên nhân thường là task chưa có `metadata.execution.primary_commands`.
-
-### 2. Packet quá to
-
-Giảm:
-
-- `related_paths`
-- `related_modules`
-- handoff không cần thiết
-
-### 3. Verifier fail ngay lần đầu
-
-Kiểm:
-
-- `acceptance_criteria` có quá rộng không
-- command có thực sự tạo output/changed files không
-
-### 4. Retry không cải thiện
-
-Kiểm:
-
-- `next_context_needs` có đúng lỗi không
-- `retry_commands` có khác `primary_commands` khi cần không
-
-### 5. Không biết nên đọc file nào
-
-Thứ tự đọc:
-
-1. `README.md`
-2. `templates/task.yaml`
-3. `runtime/...` artifacts sau khi chạy
-
----
-
-## Câu ngắn nhất để nhớ
-
-```text
-Compile -> Write task -> Plan -> Run -> Read reports
+Role first. Task second. Work third. Report last.
 ```

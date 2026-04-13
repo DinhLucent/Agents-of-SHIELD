@@ -5,6 +5,7 @@ a classification dict consumed by the router and retriever.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +14,11 @@ from typing import Any
 _TYPE_KEYWORDS: dict[str, list[str]] = {
     "bugfix": ["fix", "bug", "error", "crash", "broken", "regression", "hotfix"],
     "refactor": ["refactor", "cleanup", "restructure", "simplify", "reorganize"],
-    "test": ["test", "coverage", "spec", "e2e", "unit test"],
+    "test": [
+        "add test", "add tests", "write test", "write tests", "run tests",
+        "test coverage", "coverage", "spec", "e2e", "unit test",
+        "integration test", "failing test",
+    ],
     "documentation": ["document", "docs", "readme", "changelog", "wiki"],
     "security": ["security", "vulnerability", "cve", "pen test", "audit"],
     "feature": ["add", "implement", "create", "build", "new", "feature"],
@@ -21,7 +26,7 @@ _TYPE_KEYWORDS: dict[str, list[str]] = {
 
 # Keywords that raise risk level
 _HIGH_RISK_KEYWORDS: list[str] = [
-    "payment", "security", "auth", "prod", "critical", "token",
+    "payment", "security", "auth", "production", "critical", "token",
     "credential", "database migration", "breaking change", "deploy",
 ]
 
@@ -46,7 +51,7 @@ class TaskClassifier:
         description = (task.get("description") or "").lower()
         text = f"{title}\n{description}"
 
-        task_type = self._detect_type(text)
+        task_type = self._detect_type(task, text)
         domain = self._detect_domain(text, task.get("domain", "general"))
         risk_level = self._detect_risk(text, task_type)
 
@@ -62,9 +67,17 @@ class TaskClassifier:
 
     # ── Private helpers ──────────────────────────────────────
 
-    def _detect_type(self, text: str) -> str:
+    def _detect_type(self, task: dict[str, Any], text: str) -> str:
+        explicit = (
+            task.get("task_type")
+            or task.get("type")
+            or task.get("metadata", {}).get("task_type")
+        )
+        if explicit in _TYPE_KEYWORDS:
+            return str(explicit)
+
         for task_type, keywords in _TYPE_KEYWORDS.items():
-            if any(kw in text for kw in keywords):
+            if any(self._contains_keyword(text, kw) for kw in keywords):
                 return task_type
         return "feature"
 
@@ -72,18 +85,23 @@ class TaskClassifier:
         if explicit != "general":
             return explicit
         for domain, keywords in _DOMAIN_KEYWORDS.items():
-            if any(kw in text for kw in keywords):
+            if any(self._contains_keyword(text, kw) for kw in keywords):
                 return domain
         return "general"
 
     def _detect_risk(self, text: str, task_type: str) -> str:
         if task_type == "security":
             return "high"
-        if any(kw in text for kw in _HIGH_RISK_KEYWORDS):
+        if any(self._contains_keyword(text, kw) for kw in _HIGH_RISK_KEYWORDS):
             return "high"
         if task_type in ("refactor", "feature"):
             return "medium"
         return "low"
+
+    def _contains_keyword(self, text: str, keyword: str) -> bool:
+        """Match keywords as terms/phrases, not arbitrary substrings."""
+        pattern = r"(?<![a-z0-9_-])" + re.escape(keyword.lower()) + r"(?![a-z0-9_-])"
+        return re.search(pattern, text) is not None
 
     def _likely_roles(self, task_type: str, domain: str) -> list[str]:
         roles: list[str] = []

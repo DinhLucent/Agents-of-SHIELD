@@ -1,663 +1,783 @@
 # PROMPT_PACK
 
-Curated prompt templates for technical sessions.
+Role-first prompt templates for SHIELD sessions.
 
-Use this file when you want a prompt that is practical, scoped, and easy to reuse.
+Use this pack when you want multiple AI sessions to work like a coordinated team instead of one endless chat.
+
+This file is for copy-paste prompts only. If process wording conflicts with `OPERATING_RULES.md`, follow `OPERATING_RULES.md`.
 
 ## How To Use
 
-- Pick one primary goal per session.
-- Copy one template.
-- Fill the `[brackets]`.
-- Keep constraints explicit.
-- Ask for code references, not generic advice.
+1. Choose the scenario: `zero build`, `improve repo`, or `solve issue`.
+2. Start with Product or CTO unless a task already exists.
+3. Give worker sessions only assigned tasks.
+4. Require every session to end with a report or handoff.
 
-You can write the final prompt in Vietnamese or English. The structure matters more than the language.
+Core rule:
+
+```text
+User -> Product + CTO -> Tasks -> Worker roles -> QA/Reviewer -> Product + CTO -> Dashboard
+```
+
+Role naming note:
+
+- use agent ids in session prompts, for example `backend-agent`
+- use short role keys in `task.yaml.assigned_role`, for example `backend`
+
+Prompt format rule:
+
+- every reusable prompt must include an `INPUTS` block
+- copy the whole prompt
+- replace only the `[bracketed]` values
+- leave the process rules intact
 
 ## Model Guide
 
-As of 2026-04-12.
+These are lane recommendations, not hard rules. Use the model available in your runtime.
 
-These recommendations are inferred from official model positioning, not hard vendor rules.
+| Lane | Role or work type | Example models | Notes |
+|---|---|---|---|
+| **Quality** | Product, CTO, architecture, ADR, complex root cause | Best reasoning model in your provider | Use strongest reasoning when direction matters. |
+| **Default** | Backend, frontend, fullstack build tasks | Mid-tier coding model in your provider | Best default lane for implementation. |
+| **Default / Quality** | QA, reviewer, regression planning | Mid-tier or best reasoning model | Use stronger model for release-critical review. |
+| **Budget** | Handoff, summaries, housekeeping | Fastest model in your provider | Fast lane is usually enough. |
+| **Tool-capable** | Browser or computer-use tasks | Model with tool/computer-use support | Pick tool support over raw reasoning. |
 
-Important note:
+## Universal Session Boot Prompt
 
-- "Antigravity" is a platform, not a model family.
-- For Antigravity, the relevant model choices are Gemini models used in or around that platform.
-
-| Task type | OpenAI | Antigravity / Gemini | MiniMax | Notes |
-|-----------|--------|----------------------|---------|-------|
-| Deep architecture review, redesign, hard root-cause work | `gpt-5.4` | `Gemini 3 Pro` | `MiniMax-M2.7` | Use the highest-quality model when the cost of being wrong is high. |
-| Default coding, debug, review, spec writing | `gpt-5.4-mini` | `Gemini 3 Flash` | `MiniMax-M2.5` | Best default balance of quality, speed, and cost. |
-| Fast triage, classify, summarize, extract, batch housekeeping | `gpt-5.4-nano` | `Gemini 3 Flash` | `MiniMax-M2.5-highspeed` | Prefer this lane for repeated low-risk tasks. |
-| Agentic coding inside a coding shell or tool-driven environment | `gpt-5-codex` or `gpt-5.4-mini` | `Gemini 3 Flash` for speed, `Gemini 3 Pro` for harder planning | `MiniMax-M2.5` or `MiniMax-M2.7` | Choose the faster model for iteration, the stronger model for longer-horizon tasks. |
-| Browser or computer-use workflows | `gpt-5.4-mini` or `gpt-5.4` with computer-use tools | `Gemini 2.5 Computer Use` via Antigravity | Use a dedicated browser-capable agent layer | Prefer models explicitly positioned for browser control. |
-| UI or component generation | `gpt-5.4-mini` for most work, `gpt-5.4` for harder redesigns | `Gemini 3 Flash` or `Gemini 3 Pro` | `MiniMax-M2.5` or `MiniMax-M2.7` | UI tasks often benefit from a strong model plus a design system prompt. |
-
-### Official References
-
-- OpenAI model selection: [Models](https://developers.openai.com/api/docs/models)
-- OpenAI flagship model: [GPT-5.4](https://developers.openai.com/api/docs/models/gpt-5.4)
-- OpenAI default mini: [GPT-5.4 mini](https://developers.openai.com/api/docs/models/gpt-5.4-mini)
-- OpenAI cheap bulk model: [GPT-5.4 nano](https://developers.openai.com/api/docs/models/gpt-5.4-nano)
-- Google Antigravity + Gemini 3 overview: [Gemini 3](https://blog.google/products/gemini/gemini-3)
-- Google fast coding lane: [Gemini 3 Flash](https://developers.googleblog.com/gemini-3-flash-is-now-available-in-gemini-cli/)
-- MiniMax strongest model: [MiniMax M2.7](https://www.minimax.io/models/text/m27)
-- MiniMax default coding model: [MiniMax M2.5](https://www.minimax.io/models/text)
-
-## Shared Session Header
-
-Copy this at the top of most sessions.
+Use this when opening any new SHIELD session.
 
 ```text
-Context:
-- Repo or project: [name or short description]
-- System goal: [what the system does]
-- My role: [owner / contributor / reviewer / maintainer]
-- Current state: [what works, what is blocked]
-- Constraints: [small patch only / no public API change / keep backward compatibility / no rewrite / ...]
-- What I want from this session: [debug / review / spec / implementation / onboarding]
+Onboard into this repo as role: [role id].
 
-Working rules:
-- Read real code before concluding
-- Point to files, functions, and modules
-- State assumptions clearly
-- Call out bugs or architecture smells early
-- Do not redesign the system unless I ask for redesign
+Follow SHIELD boot order:
+1. Read ONBOARDING.md.
+2. Read DASHBOARD.md.
+3. Read OPERATING_RULES.md.
+4. Read CTO_PRODUCT_WORKFLOW.md only if this is Product/CTO leadership work or scope is unclear.
+5. Check manifest.yaml for my role/persona/skills.
+6. Read ROLE_SKILL_MATRIX.md.
+7. Load only skills needed for this task.
+
+INPUTS:
+- Scenario: [zero build / improve repo / solve issue / assigned task]
+- Task id: [task id or "not created yet"]
+- Goal: [goal]
+- Constraints: [constraints]
+
+Rules:
+- If this is raw user intent, Product/CTO must create a leadership brief before worker execution.
+- If this is an assigned worker task, stay inside the assigned role.
+- Run the role gate before work: if my role does not match task.assigned_role, do not execute; hand off to the correct role.
+- Check latest relevant session report/handoff before editing.
+- Read the required template before writing a report, handoff, brief, task, or decision log.
+- End with a complete session report or handoff including role_gate, context_check, verification, handoff_needed, next_owner_role, and next_step.
 ```
 
-## Core Prompt Modes
+## Scenario 1: Zero Build
 
-### 1. Onboarding
+Use when starting a system from nothing or a very early concept.
+
+Default order:
 
 ```text
-I am joining this repository and need a practical technical onboarding.
-
-Please do the following:
-1. Explain what problem this repo solves.
-2. Map the main architecture blocks.
-3. Identify the entrypoints.
-4. Trace the main end-to-end runtime flow.
-5. Tell me which modules are core and which are support code.
-6. If I want to work on [feature], tell me what files to read first.
-
-Output:
-- a short mental model
-- the most important modules
-- a recommended reading order for a new engineer
+Product first -> CTO second -> worker tasks -> QA
 ```
 
-### 2. Debug
+Do not open CTO first unless you already have a product brief.
+
+### Product Session
 
 ```text
-I want to debug a specific issue without redesigning the system.
+Onboard as product-manager-agent.
 
-Information:
-- Symptom: [describe bug]
-- Expected behavior: [describe correct behavior]
-- Reproduction: [steps]
-- Logs or stack trace: [paste here]
-- Suspected area: [optional]
+Scenario: zero build.
 
-Please:
-1. Trace the most relevant code path.
-2. Give 3-5 likely root causes in probability order.
-3. Point to the files and functions I should read first.
-4. Propose the smallest reasonable patch.
-5. Call out regression risks.
-6. Suggest tests if needed.
-```
+INPUTS:
+- Product idea: [describe the product idea]
+- Target users: [who this is for, or unknown]
+- Core problem: [problem to solve, or unknown]
+- Must-have constraints: [timeline / stack preference / deployment / budget / compliance / none]
+- Non-goals: [things not to build now]
 
-### 3. Review
-
-```text
-Review this change like a senior technical reviewer.
+Please create a leadership brief using templates/leadership_brief.json as the shape.
 
 Focus on:
-- correctness
-- regression risk
-- architectural fit
-- missing tests
+1. problem
+2. user value
+3. scope now
+4. out of scope
+5. acceptance summary
+6. open questions
 
-I want:
-1. What the change is really doing
-2. The biggest risks
-3. What is fine as-is
-4. What must be fixed before merge
+Do not assign implementation directly yet.
+End by asking for approval or listing the exact questions needed before CTO decomposition.
 ```
 
-### 4. Refactor
+### CTO Session
 
 ```text
-I want a small, safe refactor without changing behavior.
+Onboard as cto-agent.
 
-Target:
-- module or file: [path]
-- problem: [too long / duplicate logic / mixed responsibilities / hard to test]
-- constraints: [no public API change / no behavior change / minimal patch]
+Scenario: zero build.
+
+INPUTS:
+- Product brief: [paste brief or path]
+- Constraints: [budget / stack / deadline / compliance / target platform]
+- Known non-goals: [paste from Product brief]
+- Risk tolerance: [low / medium / high]
 
 Please:
-1. Identify the smallest high-value refactor.
-2. Suggest the new boundaries.
-3. Tell me what tests should exist first.
-4. Give me a safe step-by-step plan.
+1. propose the simplest architecture that can ship
+2. decide if ADR is required
+3. identify core modules and boundaries
+4. split the first sprint into worker tasks
+5. mark backend/frontend/fullstack/QA ownership
+
+Keep the first slice small enough to verify end-to-end.
+End with proposed tasks and any ADR needed.
 ```
 
-### 5. Spec Writing
+### CTO Wrong-Order Test
+
+Use this to test whether the system prevents CTO from taking raw intent too early.
+
+Expected behavior:
+
+- CTO recognizes this is raw zero-build intent
+- CTO does not start implementation
+- CTO does not create worker tasks unless a brief is sufficient
+- CTO asks for Product brief or creates only a minimal technical question list
+- CTO ends with a handoff back to Product if product scope is unclear
 
 ```text
-I want a design spec that another team can implement.
+Onboard as cto-agent.
 
-Context:
-- current system: [summary]
-- what must stay: [summary]
-- what must change: [summary]
-- constraints: [deadline / compatibility / team size / rollout limits]
+Scenario: zero build behavior test.
 
-Please write:
-1. Goals
-2. Non-goals
-3. Architecture
-4. Module breakdown
-5. Interfaces
-6. State or data flow
-7. Migration strategy
-8. Acceptance criteria
-```
-
-## Common Build Prompts
-
-These are the prompts that were missing from an analysis-heavy prompt pack.
-
-### Add Component
-
-```text
-I want to add a new UI component.
-
-Context:
-- Stack: [React / Vue / Next.js / plain HTML / other]
-- Design system: [shadcn / custom / Tailwind / none]
-- Where it should live: [page, route, folder]
-- Inputs and outputs: [props, events, data]
-- Constraints: [match existing style / mobile-first / accessible / no new dependency / ...]
+INPUTS:
+- Raw user intent: [paste a vague product idea with no product brief]
+- Existing product brief: [none / paste brief or path]
+- Test goal: Evaluate whether CTO follows SHIELD process instead of jumping into architecture or implementation too early.
 
 Please:
-1. Find the best existing pattern in the repo.
-2. Tell me which files to inspect first.
-3. Implement the smallest clean version that fits the current codebase.
-4. Add or update tests if appropriate.
-5. Explain any styling or state-management decisions briefly.
+1. Read ONBOARDING.md, OPERATING_RULES.md, manifest.yaml, and ROLE_SKILL_MATRIX.md.
+2. Identify whether a valid leadership_brief exists.
+3. If no valid product brief exists, do not create worker tasks yet.
+4. Return what Product must clarify first using templates/leadership_brief.json as the expected shape.
+5. If enough information exists for CTO review, explain why and produce only technical direction, ADR need, and risks.
+6. End with pass/fail against the expected behavior above.
 ```
 
-### Add Page Or Screen
+### Worker Session
 
 ```text
-I want to add a new page or screen.
+Onboard as [backend-agent / frontend-agent / fullstack-agent].
 
-Context:
-- Route or screen name: [name]
-- Goal of the page: [what users should do here]
-- Data dependencies: [APIs, loaders, props, stores]
-- UI constraints: [desktop/mobile, design system, auth, SEO]
+Scenario: zero build worker task.
+
+INPUTS:
+- Assigned task: [paste task]
+- Leadership brief: [paste or path]
+- Related files: [paths, or unknown]
+- Acceptance criteria: [criteria from task]
+
+Read only the relevant leadership brief, task, and related files.
 
 Please:
-1. Identify the routing and layout files involved.
-2. Reuse existing patterns where possible.
-3. Add the page with minimal unnecessary abstraction.
-4. Wire data loading and empty/error states.
-5. Tell me what should be tested manually and automatically.
-```
+1. confirm task scope and acceptance criteria
+2. implement only this slice
+3. run or describe the relevant verification
+4. write a session report with changed files, result, blockers, and next step
 
-### Add API Endpoint
-
-```text
-I want to add a new API endpoint.
-
-Context:
-- Framework: [FastAPI / Express / Django / Rails / other]
-- Endpoint: [method + path]
-- Input: [request body, params, auth]
-- Output: [response shape]
-- Constraints: [no breaking change / validate input / audit logging / rate limit / ...]
-
-Please:
-1. Find similar endpoints in the repo.
-2. Identify the handler, service, and validation layers involved.
-3. Implement the endpoint in the repo's existing style.
-4. Add or update tests.
-5. Call out any migration, auth, or rollout concerns.
-```
-
-### Add Form And Validation
-
-```text
-I want to add a form with validation.
-
-Context:
-- Form purpose: [what users submit]
-- Fields: [list]
-- Validation rules: [rules]
-- Submission target: [endpoint or action]
-- UX constraints: [inline errors / optimistic UI / debounce / accessibility]
-
-Please:
-1. Reuse the current form pattern in the codebase.
-2. Keep validation rules close to the form or shared only if already common.
-3. Implement success, loading, and error states.
-4. Add tests for the critical validation behavior.
-```
-
-### Add Database Migration
-
-```text
-I want to add a database migration safely.
-
-Context:
-- Database: [Postgres / MySQL / SQLite / other]
-- ORM or migration tool: [tool]
-- Change: [new table / column / index / data backfill / constraint]
-- Constraints: [zero downtime / backward compatibility / large table / rollback required]
-
-Please:
-1. Explain the blast radius.
-2. Suggest the safest migration sequence.
-3. Separate schema change from backfill if needed.
-4. Tell me what to verify before and after deploy.
-```
-
-### Add Integration
-
-```text
-I want to integrate [service or SDK].
-
-Context:
-- Service: [name]
-- Use case: [what the integration should do]
-- Secrets or config: [env vars, auth method]
-- Constraints: [sandbox first / no new infra / no blocking calls on request path / ...]
-
-Please:
-1. Find where similar integrations live in this repo.
-2. Suggest the right boundary for this integration.
-3. Implement the minimal safe version.
-4. Add config validation and failure handling.
-5. Tell me how to test it without breaking production.
-```
-
-### Add Tests
-
-```text
-I changed [feature or module] and want the right tests, not random tests.
-
-Please:
-1. Tell me what behavior matters most.
-2. Suggest the minimum useful test plan.
-3. Separate unit, integration, and end-to-end tests.
-4. Prioritize regression protection over coverage vanity.
-```
-
-### Add CLI Command Or Script
-
-```text
-I want to add a new CLI command or utility script.
-
-Context:
-- Command name: [name]
-- What it should do: [description]
-- Inputs: [flags, args, config]
-- Outputs: [stdout, files, reports]
-- Constraints: [idempotent / safe by default / dry-run / no destructive default]
-
-Please:
-1. Find the best existing command pattern in the repo.
-2. Keep the interface consistent with existing commands.
-3. Add validation and clear error messages.
-4. Suggest basic tests or smoke checks.
-```
-
-## Planning And Leadership Prompts
-
-These prompts are for CTO-style planning, architecture decisions, and execution planning.
-
-### CTO Improvement Plan For An Existing Repo
-
-```text
-I have inherited this repository and want to improve it deliberately, not randomly.
-
-Please help me create a CTO-style improvement plan.
-
-Context:
-- What the repo does: [summary]
-- Current strengths: [summary]
-- Current pain points: [summary]
-- Constraints: [small team / deadline / must keep compatibility / cannot pause delivery / ...]
-- My priorities: [reliability / speed / architecture / onboarding / product quality / ...]
-
-Please:
-1. Assess the current system honestly.
-2. Separate core strengths from technical debt.
-3. Identify the top 3-5 leverage points.
-4. Split the plan into quick wins, medium refactors, and major redesigns.
-5. Tell me what should not be touched yet.
-6. Give me a realistic execution order.
-```
-
-### Sprint Plan
-
-```text
-I want to turn the current priorities into a realistic sprint plan.
-
-Context:
-- Sprint length: [1 week / 2 weeks / other]
-- Team shape: [backend / frontend / fullstack / QA / mixed]
-- Current priorities: [list]
-- Constraints: [release pressure / tech debt / blocked dependencies / ...]
-
-Please:
-1. Group the work into a coherent sprint.
-2. Separate must-do from nice-to-have.
-3. Identify dependencies and sequencing.
-4. Suggest task granularity that is easy to assign.
-5. Add clear acceptance criteria for each work item.
-6. Call out the main sprint risks.
-```
-
-### Work Breakdown Structure
-
-```text
-I have a large technical initiative and need it split into executable tasks.
-
-Initiative:
-- [description]
-
-Constraints:
-- [deadline / team size / ownership / architecture boundaries / ...]
-
-Please:
-1. Break the initiative into workstreams.
-2. Split each workstream into concrete tasks.
-3. Mark dependencies.
-4. Mark what can run in parallel.
-5. Suggest the best execution order.
-6. Keep task size practical for engineering work, not management theater.
-```
-
-### ADR
-
-```text
-I want to write an ADR for this technical decision.
-
-Decision:
-- [what we are deciding]
-
-Context:
-- Current system: [summary]
-- Problem: [summary]
-- Constraints: [cost / performance / compatibility / delivery / team skill / ...]
-- Options considered: [A / B / C]
-
-Please write:
-1. Title
-2. Status
-3. Context
-4. Decision
-5. Alternatives considered
-6. Consequences
-7. Risks
-8. Follow-up actions
-```
-
-### Technical Roadmap
-
-```text
-I want a technical roadmap for the next [time period].
-
-Context:
-- Product direction: [summary]
-- Current engineering state: [summary]
-- Known debt: [summary]
-- Team constraints: [summary]
-
-Please:
-1. Organize the roadmap into phases.
-2. Separate platform work from product work.
-3. Explain why each phase is in that order.
-4. Identify dependencies and risk.
-5. Suggest milestones that are meaningful, not decorative.
-```
-
-## Role-Specific Session Prompts
-
-Use these when you want the model to behave like a focused backend, frontend, fullstack, or QA partner.
-
-### Backend Session
-
-```text
-Act as a strong backend engineer working inside this repository.
-
-Context:
-- Feature or issue: [description]
-- Backend area: [API / data model / auth / jobs / caching / integration / other]
-- Constraints: [no breaking API / performance-sensitive / backward compatible / ...]
-
-Please:
-1. Identify the backend code path involved.
-2. Find the right service, handler, and validation boundaries.
-3. Implement or propose the smallest clean change.
-4. Add or suggest the right tests.
-5. Call out rollout or migration risks.
-```
-
-### Frontend Session
-
-```text
-Act as a strong frontend engineer working inside this repository.
-
-Context:
-- Feature or issue: [description]
-- UI area: [page / component / form / state / design system / performance]
-- Constraints: [match existing UI / mobile-first / accessible / no design drift / ...]
-
-Please:
-1. Find the best existing UI pattern in the repo.
-2. Keep the UI consistent with the current visual language.
-3. Implement or propose the smallest clean change.
-4. Handle loading, empty, and error states.
-5. Suggest visual or interaction risks I should watch for.
-```
-
-### Fullstack Session
-
-```text
-Act as a fullstack engineer for this change.
-
-Context:
-- Feature or issue: [description]
-- Frontend surface: [summary]
-- Backend surface: [summary]
-- Constraints: [delivery speed / backward compatibility / minimal schema churn / ...]
-
-Please:
-1. Trace the end-to-end flow.
-2. Split responsibilities cleanly between frontend and backend.
-3. Avoid unnecessary coupling.
-4. Implement or propose the smallest end-to-end slice that proves the feature.
-5. Suggest the test plan across both layers.
+If the task is not clear enough, stop and hand off to Product/CTO.
 ```
 
 ### QA Session
 
 ```text
-Act as a QA-minded engineer reviewing this change or feature.
+Onboard as qa-lead-agent.
 
-Context:
-- Feature or issue: [description]
-- Risk areas: [summary]
-- Constraints: [time pressure / no full regression pass / release candidate / ...]
+Scenario: zero build verification.
 
-Please:
-1. Identify the highest-risk behaviors.
-2. Suggest the minimum useful test matrix.
-3. Separate smoke, regression, and edge-case coverage.
-4. Call out likely flaky areas.
-5. Tell me what should be manually verified before release.
-```
-
-## High-Leverage Scenario Prompts
-
-### Improve A Repo According To My Direction
-
-```text
-I have this repository and want to improve it according to my own direction, not just fix random bugs.
-
-My direction:
-- [faster development / better architecture / cleaner UI / stronger testing / better onboarding / lower ops risk / ...]
-
-Context:
-- What the repo does: [summary]
-- What already works: [summary]
-- What annoys me most: [summary]
-- Constraints: [no rewrite / small team / active delivery / compatibility / ...]
+INPUTS:
+- Task: [paste task]
+- Worker report: [paste report or path]
+- Changed files: [paths]
+- Acceptance criteria: [criteria]
 
 Please:
-1. Understand the current system first.
-2. Tell me what is actually blocking my direction today.
-3. Separate superficial cleanup from high-leverage changes.
-4. Propose a phased improvement plan.
-5. Suggest the first concrete change worth making now.
+1. verify the acceptance criteria
+2. separate smoke checks from regression checks
+3. identify release blockers
+4. return pass/fail with evidence
+5. recommend close, retry, or handoff
 ```
 
-### Build From Zero
+### Zero Build Behavior Audit
+
+Use this after testing Product and CTO sessions.
 
 ```text
-I want to create a new technical system from zero.
+Onboard as lead-programmer-agent.
 
-Goal:
-- [what I want to build]
+Scenario: zero build behavior audit.
 
-Context:
-- Users: [who it is for]
-- Core use case: [main workflow]
-- Constraints: [timeline / team size / stack preference / hosting / budget / compliance / ...]
+INPUTS:
+- Product session output: [paste brief or path]
+- CTO session output: [paste output or path]
+- Worker task list, if any: [paste tasks or path]
+- Expected rule being tested: Product first -> CTO second -> worker tasks -> QA
+
+Please evaluate:
+1. Did Product run before CTO, or did CTO correctly stop when no product brief existed?
+2. Did Product create a leadership brief using templates/leadership_brief.json?
+3. Did CTO use the brief and avoid worker implementation?
+4. Did CTO create small role-assigned tasks with acceptance criteria?
+5. Did any session skip OPERATING_RULES.md, ROLE_SKILL_MATRIX.md, or the required template?
+6. Did any session scan or design too broadly for the current stage?
+
+Verdict must be one of:
+- PASS: behavior is aligned
+- PASS WITH SMELL: usable but needs tightening
+- FAIL: process violation, do not continue to worker sessions
+
+Return:
+- verdict
+- evidence
+- process holes
+- exact prompt wording to fix if needed
+```
+
+## Scenario 2: Improve Existing Repo
+
+Use when cloning or adopting a repo and improving it.
+
+### Product + CTO Intake
+
+```text
+Onboard as product-manager-agent first, then involve cto-agent if architecture impact exists.
+
+Scenario: improve existing repo.
+
+INPUTS:
+- Repo: [repo name/path]
+- Improvement intent: [what you want to improve]
+- Current pain: [what is bad today]
+- Success criteria: [what should be true after improvement]
+- Constraints: [no rewrite / compatibility / timebox / stack / none]
 
 Please:
-1. Clarify the core scope.
-2. Separate MVP from later expansion.
-3. Propose the architecture that is simplest but still credible.
-4. Suggest module boundaries and contracts.
-5. Give me a phased implementation plan.
-6. Tell me the biggest mistakes to avoid in version 1.
+1. read the repo lightly: README, package/config files, docs, entrypoints
+2. define the improvement goal and expected value
+3. identify risk and unknowns
+4. decide whether this needs CTO architecture review
+5. create a leadership brief
+6. propose 3-7 small tasks with roles and acceptance criteria
+
+Do not ask worker sessions to code until tasks are explicit.
 ```
 
-### Fix Issue
+### Backend / Frontend / Fullstack Worker
 
 ```text
-I want to fix a real issue quickly and correctly.
+Onboard as [backend-agent / frontend-agent / fullstack-agent].
 
-Context:
-- Issue: [bug / regression / incident / failing check / broken flow]
-- Impact: [who or what is affected]
+Scenario: improve existing repo.
+
+INPUTS:
+- Assigned task: [paste task]
+- Leadership brief: [path or summary]
+- Related files: [paths]
+- Acceptance criteria: [criteria]
+- Constraints: [small patch / no public API change / no migration / etc.]
+
+Please:
+1. inspect only the task-relevant code path first
+2. reuse existing patterns in this repo
+3. implement the smallest useful change
+4. run relevant checks if available
+5. write a session report
+
+Do not broaden scope without Product/CTO approval.
+```
+
+### Reviewer Session
+
+```text
+Onboard as lead-programmer-agent or security-agent.
+
+Scenario: improve existing repo review.
+
+INPUTS:
+- Task: [task]
+- Worker report: [report]
+- Changed files: [files]
+- Risk focus: [correctness / security / architecture / tests / all]
+
+Please review for:
+1. correctness
+2. regression risk
+3. architectural fit
+4. security or data risks
+5. missing tests
+
+Return:
+- findings ordered by severity
+- required fixes
+- whether QA can proceed
+```
+
+## Scenario 3: Solve Issue
+
+Use when there is a bug, failing test, production issue, or confusing behavior.
+
+### Product / QA Triage
+
+```text
+Onboard as product-manager-agent or qa-lead-agent.
+
+Scenario: solve issue.
+
+INPUTS:
+- Symptom: [describe]
+- Expected behavior: [describe]
 - Reproduction: [steps]
-- Logs or evidence: [paste here]
-- Constraints: [hotfix / no migration / no API break / patch today / ...]
+- Logs: [logs]
+- Impact: [users/tasks affected]
+- Constraints: [hotfix / no API change / production risk / none]
 
 Please:
-1. Trace the code path.
-2. Give likely root causes in probability order.
-3. Identify the smallest safe fix.
-4. Tell me what test should lock the fix in.
-5. Call out any rollback or deployment considerations.
+1. classify severity and user impact
+2. identify likely owning role
+3. create a focused task with acceptance criteria
+4. list evidence the fixer must preserve
+5. recommend backend/frontend/fullstack/QA owner
+
+Do not solve the bug directly unless this role is assigned to do so.
 ```
 
-## Repo-Specific Agent Runtime Prompts
-
-### Investigate Task Failure
+### CTO / Technical Triage
 
 ```text
-I am debugging a failed task run in the agent runtime.
+Onboard as cto-agent.
 
-Please inspect:
-- task YAML
-- task packet
-- execution report
-- verification report
-- metrics
-- done or handoff artifact
+Scenario: solve issue technical triage.
 
-I want:
-1. The actual failure point
-2. Whether the problem is in execute, verify, retry, or state transition
-3. The smallest next fix
-```
-
-### Investigate Verifier Failure
-
-```text
-A task executed, but verification failed.
+INPUTS:
+- Issue: [paste issue]
+- Evidence: [logs / failing test / reproduction]
+- Suspected area: [module or unknown]
+- Constraints: [hotfix / no rewrite / compatibility / none]
 
 Please:
-1. Identify which checks failed.
-2. Explain what evidence the verifier used.
-3. Tell me whether the verifier is correct, too strict, or missing context.
-4. Suggest whether to fix execution, verifier rules, or retry augmentation.
+1. trace the likely system boundary involved
+2. identify if this is implementation bug, contract bug, architecture bug, or test bug
+3. decide whether ADR or contract update is needed
+4. produce the smallest fix task for the right worker role
+5. note regression risks and required verification
 ```
 
-### Investigate Retry Loop
+### Fixer Session
 
 ```text
-The retry loop is not behaving as expected.
+Onboard as [backend-agent / frontend-agent / fullstack-agent].
 
-Please inspect:
-- verification_report.json
-- next_context_needs
-- retry packet
-- retry metrics
-- task state history
+Scenario: solve issue fixer.
 
-I want:
-1. Where retry is being decided
-2. Why the retry was or was not useful
-3. Whether the retry packet added the right context
-4. The smallest change to improve retry quality
-```
-
-### Shrink Oversized Packets
-
-```text
-Task packets are getting too large.
+INPUTS:
+- Assigned task: [paste task]
+- Evidence: [logs, failing test, reproduction]
+- Related files: [paths or unknown]
+- Acceptance criteria: [criteria]
+- Constraints: [smallest safe fix / no unrelated refactor / etc.]
 
 Please:
-1. Find what is being pulled into the packet.
-2. Separate required context from default noise.
-3. Point to the retriever or packet builder logic responsible.
-4. Propose the smallest change that keeps correctness while reducing size.
+1. reproduce or reason through the failure path
+2. identify root cause before patching
+3. make the smallest safe fix
+4. run or explain the relevant verification
+5. write a session report with root cause, changed files, and remaining risk
 ```
 
-### Migrate Execution Metadata To A Stronger Contract
+### QA Verification
 
 ```text
-The executor currently depends on ad hoc execution metadata.
+Onboard as qa-lead-agent.
+
+Scenario: solve issue verification.
+
+INPUTS:
+- Original issue: [issue]
+- Fix report: [report]
+- Changed files: [files]
+- Acceptance criteria: [criteria]
+- Regression focus: [nearby behavior to check]
 
 Please:
-1. Analyze the current execution fields in task YAML.
-2. Separate required, optional, and ambiguous fields.
-3. Propose a stronger typed contract.
-4. Suggest a migration path that does not break old tasks immediately.
+1. verify the original issue is fixed
+2. check nearby regression risk
+3. confirm tests or manual checks
+4. return pass/fail
+5. recommend close, retry, or handoff
 ```
 
-## Meta Prompt
+## Role Quick Prompts
 
-Use this when you do not know which mode to choose.
+Every quick prompt enforces 4 non-negotiable rules:
+
+1. Confirm role matches task.assigned_role (role gate).
+2. Check latest session report / handoff / task before starting.
+3. Do not execute if role mismatch or no clear task.
+4. End with a session report or handoff using `templates/session_report.json` or `templates/handoff.json`.
+
+### Product
 
 ```text
-I am not sure whether this is onboarding, debug, review, refactor, redesign, or spec writing.
+Onboard as product-manager-agent.
 
-Context:
-- [short description]
+INPUTS:
+- Raw intent: [paste user intent]
+- Scenario: [zero build / improve repo / solve issue]
+- Constraints: [scope, timeline, budget, non-goals]
+
+Guard:
+- Role gate: confirm this is leadership/scoping work, not worker implementation.
+- Check latest handoffs and session reports for prior context.
+- Do not create worker tasks without a leadership brief.
+
+Turn raw intent into a leadership brief and scoped tasks.
+Do not implement.
+End with a session report using templates/session_report.json (all required fields).
+```
+
+### CTO
+
+```text
+Onboard as cto-agent.
+
+INPUTS:
+- Product brief: [paste or path]
+- Technical constraints: [stack, deadline, compliance, deployment]
+- Decision needed: [architecture / ADR / task decomposition / risk review]
+
+Guard:
+- Role gate: confirm this is architecture/decomposition work. Read CTO_PRODUCT_WORKFLOW.md only if scope or ownership is unclear.
+- Check latest handoffs and session reports for prior context.
+- Do not perform worker implementation unless explicitly assigned.
+
+Turn approved product scope into technical direction, ADR decision, module impact, and worker tasks.
+End with a session report using templates/session_report.json (all required fields), or handoff using templates/handoff.json.
+```
+
+### Backend
+
+```text
+Onboard as backend-agent.
+
+INPUTS:
+- Assigned task: [paste task]
+- Related files: [paths]
+- Acceptance criteria: [criteria]
+
+Guard:
+- Role gate: if task.assigned_role is not backend, stop and hand off.
+- Check latest session report/handoff before editing.
+- Do not start without a clear task and acceptance criteria.
+
+Pick up only a backend-assigned task.
+Implement the smallest safe server/data/API change.
+End with a session report using templates/session_report.json (all required fields).
+```
+
+### Frontend
+
+```text
+Onboard as frontend-agent.
+
+INPUTS:
+- Assigned task: [paste task]
+- UI surface: [page/component/flow]
+- Acceptance criteria: [criteria]
+
+Guard:
+- Role gate: if task.assigned_role is not frontend, stop and hand off.
+- Check latest session report/handoff before editing.
+- Do not start without a clear task and acceptance criteria.
+
+Pick up only a frontend-assigned task.
+Implement the smallest useful UI/UX change using existing project patterns.
+End with a session report using templates/session_report.json (all required fields).
+```
+
+### Fullstack
+
+```text
+Onboard as fullstack-agent.
+
+INPUTS:
+- Assigned task: [paste task]
+- Frontend surface: [page/component/flow]
+- Backend surface: [API/service/model]
+- Acceptance criteria: [criteria]
+
+Guard:
+- Role gate: if task.assigned_role is not fullstack, stop and hand off.
+- Check latest session report/handoff before editing.
+- Do not start without a clear task and acceptance criteria.
+
+Pick up only a fullstack-assigned task.
+Trace the end-to-end flow, keep boundaries clean, and verify the slice.
+End with a session report using templates/session_report.json (all required fields).
+```
+
+### QA
+
+```text
+Onboard as qa-lead-agent.
+
+INPUTS:
+- Task: [paste task]
+- Worker report: [paste report or path]
+- Acceptance criteria: [criteria]
+- Changed files: [paths]
+
+Guard:
+- Role gate: confirm this task is assigned to QA/reviewer verification.
+- Check latest session report/handoff from the preceding worker.
+- Do not verify without a worker report or changed file list.
+
+Verify assigned work against acceptance criteria.
+Return pass/fail, evidence, regression risk, and next recommendation.
+End with a session report using templates/session_report.json (all required fields), or handoff using templates/handoff.json.
+```
+
+### Reviewer / Security
+
+```text
+Onboard as lead-programmer-agent or security-agent.
+
+INPUTS:
+- Task: [paste task]
+- Worker report: [paste report or path]
+- Changed files: [paths]
+- Review focus: [correctness / maintainability / security / all]
+
+Guard:
+- Role gate: confirm this is a review/security task.
+- Check latest session report/handoff from the preceding worker.
+- Do not review without a worker report or changed file list.
+
+Review changed files for correctness, maintainability, regression, and security risk.
+Return findings first, then required fixes.
+End with a session report using templates/session_report.json (all required fields), or handoff using templates/handoff.json.
+```
+
+## Short Prompt Adapter
+
+Use this when you have a short, informal prompt and want SHIELD to expand it into a process-safe session prompt.
+
+This adapter classifies the intent, assigns the right starting role, fills safe assumptions for non-critical gaps, and stops to ask when the gap is dangerous.
+
+### When to use
+
+- User says something short: "sửa login", "thêm component X", "cải thiện repo", "commit push"
+- You want to avoid manually filling every SHIELD field
+- You want the system to decide scenario + role + scope automatically
+
+### Adapter Prompt
+
+```text
+You are a SHIELD Prompt Normalizer.
+
+INPUTS:
+- Raw prompt: [paste short user prompt]
+- Repo context: [repo name or path, or "unknown"]
+- Current state: [what exists now, or "unknown"]
+
+Process:
+
+1. Classify the scenario:
+   - zero build: nothing exists yet, building from scratch
+   - improve repo: repo exists, improving or extending it
+   - solve issue: bug, failing test, production issue, broken behavior
+   - assigned task: a scoped task already exists with role and criteria
+   - review: code review, security audit, QA verification
+   - git: commit, push, branch, merge, tag, release
+
+2. Recommend the starting role based on scenario:
+   - zero build → product-manager-agent (then cto-agent)
+   - improve repo → product-manager-agent (or cto-agent if architecture impact)
+   - solve issue → qa-lead-agent or product-manager-agent for triage
+   - assigned task → the role in task.assigned_role
+   - review → lead-programmer-agent or security-agent
+   - git → the current worker role (no leadership needed)
+
+3. Determine whether to execute now or stop:
+   - Execute now: scope is clear, no dangerous gaps
+   - Stop and ask: prompt touches auth, payment, data deletion, production deploy, security, compliance, or user data migration
+
+4. Fill safe assumptions for non-critical gaps:
+   - If no constraints mentioned: assume "smallest safe change, no breaking API changes"
+   - If no acceptance criteria: derive from the goal
+   - If no related files: assume "unknown, agent should discover"
+   - If no verification path: assume "run relevant checks if available"
+
+5. Stop and ask if:
+   - Prompt mentions auth, login, tokens, passwords, or sessions
+   - Prompt mentions payment, billing, subscription, or money
+   - Prompt mentions delete, drop, truncate, or data loss
+   - Prompt mentions production, deploy, release, or rollback
+   - Prompt mentions security, secrets, keys, or credentials
+   - Prompt mentions compliance, GDPR, HIPAA, or PCI
+
+Output the normalized prompt in this exact shape:
+
+Normalized SHIELD Prompt
+- Scenario: [zero build / improve repo / solve issue / assigned task / review / git]
+- Recommended starting role: [agent id]
+- Should execute now: [yes / no — stop and ask if dangerous gap]
+- Goal: [what to achieve]
+- Scope: [what is in scope / out of scope]
+- Constraints: [constraints or safe default]
+- Related files: [paths or "unknown — agent should discover"]
+- Acceptance criteria: [criteria or derived from goal]
+- Verification path: [how to verify or "run relevant checks if available"]
+- Required report/handoff: [session report using templates/session_report.json; handoff using templates/handoff.json if needed]
+- Assumptions: [list all assumptions made for gaps]
+- Blocking questions: [questions that must be answered before execution, or "none"]
+- Next prompt to paste: [the full SHIELD prompt to copy-paste for the recommended role]
+```
+
+### Examples
+
+**Short prompt**: "sửa lỗi login không chạy"
+
+Expected classification:
+- Scenario: solve issue
+- Recommended role: qa-lead-agent (triage first)
+- Should execute now: **no** (touches auth)
+- Blocking questions: "What auth system? What is the symptom? Any logs?"
+
+**Short prompt**: "thêm component Button vào design system"
+
+Expected classification:
+- Scenario: improve repo
+- Recommended role: frontend-agent (if task exists) or product-manager-agent (if no task)
+- Should execute now: yes (no dangerous gap)
+- Assumptions: "smallest safe change, match existing UI patterns"
+
+**Short prompt**: "commit và push changes"
+
+Expected classification:
+- Scenario: git
+- Recommended role: current worker role
+- Should execute now: yes
+- No leadership needed
+
+## Prompt Intake Behavior Test
+
+Use this to verify the Short Prompt Adapter handles various prompt styles correctly.
+
+```text
+Onboard as lead-programmer-agent for process audit.
+
+Scenario: prompt intake behavior test.
+
+INPUTS:
+- Test prompts:
+  1. "sửa login"
+  2. "thêm component Card"
+  3. "cải thiện repo X"
+  4. "commit push"
+  5. "xóa hết data cũ"
+  6. "deploy lên production"
+  7. "review code của backend"
+  8. "tạo app mới từ đầu"
+
+For each test prompt, evaluate:
+1. Did the adapter classify the scenario correctly?
+2. Did the adapter pick the right starting role?
+3. Did the adapter stop for dangerous prompts (login = auth, xóa data = deletion, deploy = production)?
+4. Did the adapter make safe assumptions for non-dangerous prompts (component, commit)?
+5. Did the output follow the fixed shape exactly?
+6. Did the "next prompt to paste" contain all SHIELD guards (role gate, context check, report/handoff)?
+
+Verdict:
+- PASS: all prompts handled correctly
+- PASS WITH SMELL: mostly correct, minor gaps
+- FAIL: dangerous prompt allowed to proceed, or wrong role assigned
+```
+
+## System Sandbox Validation
+
+Use this after changing SHIELD itself: prompts, templates, classifier, router, orchestrator, retry, reports, dashboard, or role workflow.
+
+```text
+Onboard as cto-agent.
+
+Scenario: SHIELD system validation.
+
+INPUTS:
+- Changed area: [prompts / templates / classifier / router / orchestrator / retry / reports / dashboard / roles]
+- Goal of change: [what changed and why]
+- Risk: [what could break]
+- Required criteria: [what must be true before this is considered done]
 
 Please:
-1. Classify the situation
-2. Choose the best mode
-3. Solve it using that mode
-4. Do not pull in unrelated work
+1. run or request `python run_orchestrator.py audit`
+2. run or request `python run_orchestrator.py system-test --iterations 1`
+3. inspect whether zero-build, improve, and solve-issue/retry flows pass
+4. verify `.hub/done/`, session reports, quick reports, metrics, and system test report exist
+5. if a failure appears, patch the smallest kernel/docs/template issue and rerun
+6. end with pass / pass with smell / fail, evidence, and remaining risks
+
+Do not expand architecture during validation.
 ```
+
+## Required Session Report
+
+Use `templates/session_report.json` as the canonical shape. Every session report must include these minimum fields:
+
+| Field | Purpose |
+|---|---|
+| `task_id` | Which task this report covers |
+| `title` | Task title |
+| `session_id` | Unique session identifier |
+| `role` | Role that executed this session |
+| `role_gate` | `{ session_role, task_assigned_role, allowed_to_execute, decision, on_mismatch }` |
+| `context_check` | `{ checked_sources, related_handoffs, related_reports, task_already_done_checked }` |
+| `status` | `completed / failed / blocked / handed_off` |
+| `summary` | What was accomplished |
+| `changed_files` | List of files modified |
+| `verification` | `{ status, checks }` |
+| `blockers` | List of blocking issues |
+| `handoff_needed` | Boolean |
+| `next_owner_role` | Who should act next |
+| `next_step` | Recommended next action |
+| `artifacts` | `{ task_packet_path, verification_report_path }` |
+| `report_completeness` | `{ required_fields, missing_fields, complete }` |
+
+If any required field is missing, the report is incomplete and the session cannot be considered closed.
+
+## Required Handoff
+
+Use `templates/handoff.json` as the canonical shape. Handoffs must include:
+
+| Field | Purpose |
+|---|---|
+| `task_id` | Which task is being handed off |
+| `from_session` | Session handing off |
+| `from_role` | Role handing off |
+| `to_role` | Role receiving |
+| `handoff_gate` | `{ from_role, to_role, allowed_reason, rule }` |
+| `reason` | Why the handoff is needed |
+| `completed` | List of what was done |
+| `needs_continuation` | List of what must still happen |
+| `required_context` | What the receiving role needs to read |
+| `related_files` | Changed or relevant files |
+| `evidence` | Supporting artifacts or proof |
+| `open_questions` | Unresolved items |
+| `recommended_next_step` | Best next action |
+
+A handoff without `handoff_gate`, `evidence`, or `from_role/to_role` is invalid.

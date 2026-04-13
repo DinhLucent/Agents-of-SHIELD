@@ -33,6 +33,15 @@ class TaskStateMachine:
             "session_id": session_id,
             "title": task.get("title", ""),
             "status": "prepared",
+            "phase": "execution",
+            "owner_role": task.get("metadata", {}).get("collaboration", {}).get(
+                "owner_role",
+                execution_mode.get("primary_role", task.get("assigned_role", "")),
+            ),
+            "owner_session": task.get("metadata", {}).get("collaboration", {}).get(
+                "owner_session",
+                session_id,
+            ),
             "attempt": 0,
             "execution_mode": execution_mode.get("mode", "solo"),
             "current_step": None,
@@ -52,6 +61,9 @@ class TaskStateMachine:
             title=state["title"],
             session_id=session_id,
             execution_mode=execution_mode.get("mode", "solo"),
+            owner_role=state["owner_role"],
+            owner_session=state["owner_session"],
+            phase=state["phase"],
             history=state["history"],
         )
 
@@ -65,6 +77,9 @@ class TaskStateMachine:
         title: str | None = None,
         session_id: str | None = None,
         execution_mode: str | None = None,
+        owner_role: str | None = None,
+        owner_session: str | None = None,
+        phase: str | None = None,
         history: list[dict[str, Any]] | None = None,
         note: str = "",
     ) -> dict[str, Any]:
@@ -81,8 +96,15 @@ class TaskStateMachine:
             state["session_id"] = session_id
         if execution_mode is not None:
             state["execution_mode"] = execution_mode
+        if owner_role is not None:
+            state["owner_role"] = owner_role
+        if owner_session is not None:
+            state["owner_session"] = owner_session
+        if phase is not None:
+            state["phase"] = phase
 
         state["status"] = status
+        state["phase"] = phase or self._phase_for_status(status)
         state["attempt"] = attempt
         state["current_step"] = current_step
         state["updated_at"] = self._timestamp()
@@ -106,6 +128,8 @@ class TaskStateMachine:
         execution_results: list[dict[str, Any]],
         retries: list[dict[str, Any]],
         handoff_path: Path | None = None,
+        session_report_path: Path | None = None,
+        quick_report_path: Path | None = None,
     ) -> dict[str, Any]:
         state = self._load(task_id)
         state["status"] = final_status
@@ -120,10 +144,17 @@ class TaskStateMachine:
         })
         if handoff_path is not None:
             state.setdefault("artifacts", {})["handoff_path"] = str(handoff_path)
+        if session_report_path is not None:
+            state.setdefault("artifacts", {})["session_report_path"] = str(session_report_path)
+        if quick_report_path is not None:
+            state.setdefault("artifacts", {})["quick_report_path"] = str(quick_report_path)
         done_payload = {
             "task_id": task_id,
             "title": state.get("title", ""),
             "session_id": state.get("session_id"),
+            "owner_role": state.get("owner_role"),
+            "owner_session": state.get("owner_session"),
+            "phase": "closed",
             "execution_mode": state.get("execution_mode"),
             "status": final_status,
             "attempt": state.get("attempt", 0),
@@ -187,6 +218,9 @@ class TaskStateMachine:
             "task_id": task_id,
             "title": state.get("title", ""),
             "status": state.get("status", ""),
+            "phase": state.get("phase", ""),
+            "owner_role": state.get("owner_role", ""),
+            "owner_session": state.get("owner_session", ""),
             "attempt": state.get("attempt", 0),
             "current_step": state.get("current_step"),
             "execution_mode": state.get("execution_mode"),
@@ -202,3 +236,14 @@ class TaskStateMachine:
 
     def _timestamp(self) -> str:
         return datetime.now(timezone.utc).isoformat()
+
+    def _phase_for_status(self, status: str) -> str:
+        if status in {"prepared", "executing", "executed", "reviewing"}:
+            return "execution"
+        if status == "verifying":
+            return "verification"
+        if status == "retrying":
+            return "retry"
+        if status in self.TERMINAL_STATES:
+            return "closed"
+        return "coordination"

@@ -12,19 +12,24 @@ window.promptRegistry.push({
         { id: "impact", label: "Mức độ ảnh hưởng", type: "text", placeholder: "Số lượng user, task bị lỗi..." },
         { id: "recent_changes", label: "Thay đổi gần đây", type: "text", placeholder: "Deploy/Config change..." }
     ],
-    template: `Tôi đang xử lý một incident nghiêm trọng.
+    template: `<system_directive>
+Tôi đang xử lý một incident nghiêm trọng.
+</system_directive>
 
-Thông tin:
+<input_content>
 - Triệu chứng: {{symptoms}}
 - Mức độ ảnh hưởng: {{impact}}
 - Thay đổi gần đây: {{recent_changes}}
+</input_content>
 
+<instructions>
 Hãy giúp tôi:
-1. Tạo timeline điều tra nhanh
-2. Xác định vùng hệ thống đáng nghi nhất
-3. Nêu 3 nguyên nhân gốc (Root cause) có xác suất cao nhất
-4. Đề xuất các bước kiểm tra (Verify) theo thứ tự ưu tiên
-5. Tách rõ mitigations tạm thời (giảm đau ngay) và root fix lâu dài.`
+1. Tạo timeline điều tra nhanh.
+2. Xác định vùng hệ thống đáng nghi nhất.
+3. Nêu 3 nguyên nhân gốc (Root cause) có xác suất cao nhất.
+4. Đề xuất các bước kiểm tra (Verify) theo thứ tự ưu tiên.
+5. Tách rõ mitigations tạm thời (giảm đau ngay) và root fix lâu dài.
+</instructions>`
 });
 
 window.promptRegistry.push({
@@ -38,12 +43,19 @@ window.promptRegistry.push({
         { id: "problem", label: "Sự cố", type: "text", required: true },
         { id: "constraints", label: "Ràng buộc hotfix", type: "text", default: "Không downtime, không đổi schema" }
     ],
-    template: `Tôi cần một hotfix tối thiểu, an toàn và nhanh cho sự cố: {{problem}}.
+    template: `<system_directive>
+Tôi cần một hotfix tối thiểu, an toàn và nhanh.
+</system_directive>
 
-Ràng buộc: {{constraints}}
+<input_content>
+- Sự cố: {{problem}}
+- Ràng buộc: {{constraints}}
+</input_content>
 
+<instructions>
 Hãy:
-1. Chỉ ra patch nhỏ nhất có thể giảm thiểu rủi ro ngay lập tức
-2. Nêu rõ tradeoff/tác dụng phụ của patch này
-3. Đề xuất cách verify sau khi deploy (Smoke test)`
+1. Chỉ ra patch nhỏ nhất có thể giảm thiểu rủi ro ngay lập tức.
+2. Nêu rõ tradeoff/tác dụng phụ của patch này.
+3. Đề xuất cách verify sau khi deploy (Smoke test).
+</instructions>`
 });

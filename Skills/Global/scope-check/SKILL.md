@@ -1,73 +1,84 @@
 ---
 name: scope-check
-description: "Analyze a feature or sprint for scope creep by comparing current scope against the original plan. Flags additions, quantifies bloat, and recommends cuts."
-argument-hint: "[feature-name or sprint-N]"
+description: "Check whether a SHIELD task, feature, sprint, or issue fix is drifting beyond the approved scope."
+argument-hint: "[task-id, feature, sprint, or issue]"
 user-invocable: true
 allowed-tools: Read, Glob, Grep
-context: |
-  !git diff --stat HEAD~20 2>/dev/null
 ---
-When this skill is invoked:
 
-1. **Read the original plan** — Find the relevant document:
-   - If a feature name: read the design doc from `design/gdd/`
-   - If a sprint number: read the sprint plan from `production/sprints/`
-   - If a milestone: read the milestone definition from `production/milestones/`
+# Scope Check
 
-2. **Read the current state** — Check what has actually been implemented or is in progress:
-   - Scan the codebase for files related to the feature/sprint
-   - Read git log for commits related to this work
-   - Check for TODO comments that indicate unfinished scope additions
+Use this skill when a session may be doing more than the task asked for.
 
-3. **Compare original vs current scope**:
+The goal is to protect focus:
 
-   ```markdown
-   ## Scope Check: [Feature/Sprint Name]
-   Generated: [Date]
+```text
+approved intent -> scoped task -> bounded execution -> report or handoff
+```
 
-   ### Original Scope
-   [List of items from the original plan]
+## Workflow
 
-   ### Current Scope
-   [List of items currently implemented or in progress]
+### 1. Find The Approved Scope
 
-   ### Scope Additions (not in original plan)
-   | Addition | Who Added | When | Justified? | Effort |
-   |----------|-----------|------|------------|--------|
-   | [item] | [commit/person] | [date] | [Yes/No/Unclear] | [S/M/L] |
+Read the smallest relevant artifact:
 
-   ### Scope Removals (in original but dropped)
-   | Removed Item | Reason | Impact |
-   |-------------|--------|--------|
-   | [item] | [why removed] | [what's affected] |
+- assigned `task.yaml`
+- `leadership_brief`
+- `CTO_PRODUCT_WORKFLOW.md` task breakdown
+- `.hub/active/<task>.json`
+- `.hub/handoffs/<task>.json`
+- `runtime/reports/session_reports/<task>.json`
+- issue text or PR summary, if SHIELD artifacts do not exist yet
 
-   ### Bloat Score
-   - Original items: [N]
-   - Current items: [N]
-   - Items added: [N] (+[X]%)
-   - Items removed: [N]
-   - Net scope change: [+/-N] ([X]%)
+Do not treat vague chat as approved scope if a structured task exists.
 
-   ### Risk Assessment
-   - **Schedule Risk**: [Low/Medium/High] — [explanation]
-   - **Quality Risk**: [Low/Medium/High] — [explanation]
-   - **Integration Risk**: [Low/Medium/High] — [explanation]
+### 2. Compare Against Current Work
 
-   ### Recommendations
-   1. **Cut**: [Items that should be removed to stay on schedule]
-   2. **Defer**: [Items that can move to a future sprint/version]
-   3. **Keep**: [Additions that are genuinely necessary]
-   4. **Flag**: [Items that need a decision from producer/creative-director]
-   ```
+Check:
 
-4. **Output the scope check** with a clear verdict:
-   - **On Track**: Scope within 10% of original
-   - **Minor Creep**: 10-25% scope increase — manageable with adjustments
-   - **Significant Creep**: 25-50% scope increase — need to cut or extend timeline
-   - **Out of Control**: >50% scope increase — stop and re-plan
+- changed files
+- newly introduced modules
+- tests added or skipped
+- acceptance criteria touched
+- extra behavior added
+- new dependencies or config changes
+- any architecture decision made without a decision log
 
-### Rules
-- Scope creep is additions without corresponding cuts or timeline extensions
-- Not all additions are bad — some are discovered requirements. But they must be acknowledged and accounted for.
-- When recommending cuts, prioritize preserving the core player experience over nice-to-haves
-- Always quantify scope changes — "it feels bigger" is not actionable, "+35% items" is
+### 3. Classify Scope Drift
+
+| Verdict | Meaning |
+|---|---|
+| `on track` | Work matches task and acceptance criteria |
+| `minor drift` | Small adjacent changes, low risk, should be reported |
+| `needs approval` | Adds new behavior, dependency, schema, API, or architecture decision |
+| `out of scope` | Work solves a different problem or expands the task materially |
+
+### 4. Output
+
+Return:
+
+```markdown
+# Scope Check: [task or feature]
+
+## Verdict
+[on track / minor drift / needs approval / out of scope]
+
+## Approved Scope
+[summary]
+
+## Current Work
+[summary]
+
+## Drift
+[what changed beyond scope, if any]
+
+## Recommendation
+[continue / report drift / create handoff / ask Product or CTO]
+```
+
+### 5. Guardrails
+
+- Product owns value and scope.
+- CTO owns technical direction and architecture boundaries.
+- Worker roles should not silently expand scope.
+- If scope changed, write it into the session report or handoff.

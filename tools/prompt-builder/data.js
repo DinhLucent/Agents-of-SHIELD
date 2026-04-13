@@ -3,7 +3,7 @@
   This file ensures window.promptRegistry exists BEFORE any template scripts load.
 */
 
-window.categories = ['Understand', 'Debug', 'Review', 'Refactor', 'Design', 'Planning', 'Build', 'Role', 'Test', 'Handoff', 'Incident'];
+window.categories = ['SHIELD', 'Understand', 'Debug', 'Review', 'Refactor', 'Design', 'Planning', 'Build', 'Role', 'Test', 'Handoff', 'Incident'];
 
 // Initialize the global registry array
 window.promptRegistry = [];
@@ -11,6 +11,12 @@ window.promptRegistry = [];
 // Default model suggestions by session category.
 // Antigravity is treated as a platform, so the recommendation points to Gemini models commonly used there.
 window.modelRecommendations = {
+    SHIELD: {
+        quality: "OpenAI: gpt-5.4 | Gemini: Gemini 3 Pro | MiniMax: MiniMax-M2.7",
+        default: "OpenAI: gpt-5.4-mini | Gemini: Gemini 3 Flash | MiniMax: MiniMax-M2.5",
+        budget: "OpenAI: gpt-5.4-nano | Gemini: Gemini 3 Flash | MiniMax: MiniMax-M2.5-highspeed",
+        note: "Use the quality lane for Product/CTO leadership sessions; use the default lane for worker sessions."
+    },
     Understand: {
         quality: "OpenAI: gpt-5.4 | Gemini: Gemini 3 Pro | MiniMax: MiniMax-M2.7",
         default: "OpenAI: gpt-5.4-mini | Gemini: Gemini 3 Flash | MiniMax: MiniMax-M2.5",

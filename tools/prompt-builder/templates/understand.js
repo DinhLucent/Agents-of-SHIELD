@@ -14,28 +14,32 @@ window.promptRegistry.push({
         { id: "current_confusion", label: "Phần đang gây rối nhất", type: "textarea", placeholder: "Ví dụ: Phần state machine của orchestrator" },
         { id: "constraints", label: "Giới hạn (Constraints)", type: "text", default: "Giữ nguyên kiến trúc hiện tại" }
     ],
-    template: `Bối cảnh:
+    template: `<system_directive>
+Tôi muốn lập bản đồ kiến trúc hiện tại của repo này.
+</system_directive>
+
+<system_context>
 - Dự án: {{system_context}}
 - Mục tiêu: {{core_goal}}
 - Giới hạn: {{constraints}}
+- Phần gây rối: {{current_confusion}}
+</system_context>
 
-Tôi muốn bạn giúp tôi lập bản đồ kiến trúc hiện tại của repo này.
-
+<instructions>
 Hãy làm theo thứ tự:
-1. Xác định entrypoints chính
-2. Xác định các module lõi
-3. Vẽ luồng dữ liệu và luồng control flow
-4. Chỉ ra state machine / orchestrator / adapters nằm ở đâu
-5. Nêu module nào đóng vai trò "core kernel"
-6. Nêu module nào chỉ là glue code
+1. Xác định entrypoints chính.
+2. Xác định các module lõi.
+3. Vẽ luồng dữ liệu và luồng control flow.
+4. Chỉ ra state machine / orchestrator / adapters nằm ở đâu.
+5. Nêu module nào đóng vai trò "core kernel".
+6. Nêu module nào chỉ là glue code.
 
-Thông tin bổ sung về phần đang rối:
-{{current_confusion}}
-
-Đầu ra mong muốn:
-- Kiến trúc theo từng khối chức năng
-- Trách nhiệm của từng khối
-- File/Function chính cho mỗi khối`
+<expected_output>
+- Kiến trúc theo từng khối chức năng.
+- Trách nhiệm của từng khối.
+- File/Function chính cho mỗi khối.
+</expected_output>
+</instructions>`
 });
 
 window.promptRegistry.push({
@@ -50,10 +54,16 @@ window.promptRegistry.push({
         { id: "system_context", label: "Tên Repo", type: "text", required: true },
         { id: "feature_focus", label: "Feature tôi sắp làm", type: "text" }
     ],
-    template: `Tôi sắp tham gia tiếp tục phát triển repo {{system_context}}.
-
+    template: `<system_directive>
+Tôi sắp tham gia tiếp tục phát triển repo {{system_context}}.
 Hãy giúp tôi onboarding kỹ thuật theo hướng thực chiến.
+</system_directive>
 
+<context>
+- Feature focus: {{feature_focus}}
+</context>
+
+<instructions>
 Việc cần làm:
 1. Repo này giải bài toán cốt lõi gì?
 2. Entry points chính nằm ở đâu?
@@ -62,8 +72,10 @@ Việc cần làm:
 5. Nếu tôi muốn sửa feature {{feature_focus}}, tôi nên đọc file nào trước?
 6. Nếu tôi muốn debug issue production, tôi nên bắt đầu từ đâu?
 
-Đầu ra:
-- Một bản mental model ngắn gọn của hệ thống
-- Danh sách file quan trọng nhất
-- Thứ tự đọc code đề xuất cho người mới.`
+<expected_output_format>
+- Một bản mental model ngắn gọn của hệ thống.
+- Danh sách file quan trọng nhất.
+- Thứ tự đọc code đề xuất cho người mới.
+</expected_output_format>
+</instructions>`
 });

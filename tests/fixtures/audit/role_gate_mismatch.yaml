@@ -1,0 +1,45 @@
+# Audit Fixture: Role Gate Mismatch
+# Scenario: Routing would select frontend, but the task is assigned to QA.
+#           Runtime must block execution and create a handoff instead of
+#           running the command.
+# Run: python run_orchestrator.py run tests/fixtures/audit/role_gate_mismatch.yaml
+
+schema_version: "2.1"
+id: AUDIT-ROLE-GATE-001
+title: "Block execution when session role does not match assigned role"
+description: >
+  Safety fixture proving that SHIELD does not allow a wrongly-routed
+  session to execute commands for a task assigned to another role.
+assigned_role: qa
+priority: critical
+status: queued
+domain: frontend
+
+inputs:
+  related_paths:
+    - runtime/sessions/role_gate_forbidden_write.txt
+  related_tests: []
+  related_handoffs: []
+  related_logs: []
+  related_modules: []
+
+constraints:
+  - role_gate_required
+  - do_not_execute_on_role_mismatch
+
+acceptance_criteria:
+  - role gate blocks wrong role execution
+
+metadata:
+  fixture_type: role_gate_mismatch
+  expected_outcome: blocked_before_execution
+  expected_handoff_to: qa
+  expected_no_output_files:
+    - runtime/sessions/role_gate_forbidden_write.txt
+  execution:
+    primary_commands:
+      - "New-Item -ItemType Directory -Path 'runtime/sessions' -Force | Out-Null; Set-Content -Path 'runtime/sessions/role_gate_forbidden_write.txt' -Value 'ROLE GATE FAILED: command should not run' -Encoding utf8"
+    output_files:
+      - runtime/sessions/role_gate_forbidden_write.txt
+    satisfied_criteria:
+      - role gate blocks wrong role execution

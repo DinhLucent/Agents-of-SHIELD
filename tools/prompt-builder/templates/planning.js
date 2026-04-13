@@ -15,26 +15,33 @@ window.promptRegistry.push({
         { id: "repo_direction", label: "Desired direction", type: "text", required: true, placeholder: "Faster delivery / cleaner architecture / better onboarding / ..." },
         { id: "repo_constraints", label: "Constraints", type: "text", default: "No rewrite unless clearly justified" }
     ],
-    template: `Context:
+    template: `<system_directive>
+I want a CTO-style improvement plan for this repository.
+</system_directive>
+
+<input_content>
 - Repo or system: {{repo_goal}}
 - Desired direction: {{repo_direction}}
 - Constraints: {{repo_constraints}}
+</input_content>
 
-Current strengths:
+<strengths>
 {{repo_strengths}}
+</strengths>
 
-Current pain points:
+<pain_points>
 {{repo_pains}}
+</pain_points>
 
-I want a CTO-style improvement plan for this repository.
-
+<instructions>
 Please:
 1. Assess the current system honestly.
 2. Separate core strengths from technical debt.
 3. Identify the highest-leverage improvement areas.
 4. Split the plan into quick wins, medium refactors, and major redesigns.
 5. Tell me what should not be touched yet.
-6. Give me a realistic execution order.`
+6. Give me a realistic execution order.
+</instructions>`
 });
 
 window.promptRegistry.push({
@@ -51,23 +58,29 @@ window.promptRegistry.push({
         { id: "priorities", label: "Current priorities", type: "list", required: true, placeholder: "Type a priority and press Enter" },
         { id: "sprint_constraints", label: "Constraints", type: "text", default: "Keep tasks small and independently testable" }
     ],
-    template: `I want to turn current priorities into a realistic sprint plan.
+    template: `<system_directive>
+I want to turn current priorities into a realistic sprint plan.
+</system_directive>
 
-Context:
+<input_content>
 - Sprint length: {{sprint_length}}
 - Team shape: {{team_shape}}
 - Constraints: {{sprint_constraints}}
+</input_content>
 
-Current priorities:
+<priorities>
 {{priorities}}
+</priorities>
 
+<instructions>
 Please:
 1. Group the work into a coherent sprint.
 2. Separate must-do from nice-to-have.
 3. Identify dependencies and sequencing.
 4. Suggest task granularity that is easy to assign.
 5. Add clear acceptance criteria for each work item.
-6. Call out the main sprint risks.`
+6. Call out the main sprint risks.
+</instructions>`
 });
 
 window.promptRegistry.push({
@@ -84,21 +97,25 @@ window.promptRegistry.push({
         { id: "options", label: "Options considered", type: "list", required: true, placeholder: "Option A, Option B, ..." },
         { id: "decision_constraints", label: "Constraints", type: "text", default: "Optimize for long-term maintainability and safe rollout" }
     ],
-    template: `I want to write an ADR for this technical decision.
+    template: `<system_directive>
+I want to write an ADR for this technical decision.
+</system_directive>
 
-Decision:
-- {{decision}}
+<decision_context>
+Decision Idea: {{decision}}
+Context Detail: {{decision_context}}
+</decision_context>
 
-Context:
-{{decision_context}}
-
-Options considered:
+<options>
 {{options}}
+</options>
 
-Constraints:
-- {{decision_constraints}}
+<constraints>
+{{decision_constraints}}
+</constraints>
 
-Please write:
+<instructions>
+Please write a professional ADR including:
 1. Title
 2. Status
 3. Context
@@ -106,7 +123,8 @@ Please write:
 5. Alternatives considered
 6. Consequences
 7. Risks
-8. Follow-up actions`
+8. Follow-up actions
+</instructions>`
 });
 
 window.promptRegistry.push({
@@ -122,22 +140,23 @@ window.promptRegistry.push({
         { id: "greenfield_users", label: "Users", type: "text", required: true, placeholder: "Who it is for" },
         { id: "greenfield_constraints", label: "Constraints", type: "text", default: "Prefer simple MVP over broad platform scope" }
     ],
-    template: `I want to create a new technical system from zero.
+    template: `<system_directive>
+I want to create a new technical system from zero.
+</system_directive>
 
-Goal:
-{{greenfield_goal}}
+<input_content>
+Goal: {{greenfield_goal}}
+Users: {{greenfield_users}}
+Constraints: {{greenfield_constraints}}
+</input_content>
 
-Users:
-- {{greenfield_users}}
-
-Constraints:
-- {{greenfield_constraints}}
-
+<instructions>
 Please:
 1. Clarify the core scope.
 2. Separate MVP from later expansion.
 3. Propose the simplest credible architecture.
 4. Suggest module boundaries and contracts.
 5. Give me a phased implementation plan.
-6. Tell me the biggest mistakes to avoid in version 1.`
+6. Tell me the biggest mistakes to avoid in version 1.
+</instructions>`
 });

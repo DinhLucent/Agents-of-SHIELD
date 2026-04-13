@@ -12,23 +12,29 @@ window.promptRegistry.push({
         { id: "pending", label: "Việc đang dở", type: "textarea" },
         { id: "risks", label: "Rủi ro cần chú ý", type: "text" }
     ],
-    template: `Tôi muốn viết handoff note cho người tiếp quản công việc này.
+    template: `<system_directive>
+Tôi muốn viết handoff note cho người tiếp quản công việc này.
+</system_directive>
 
-Nội dung bàn giao:
-- Những gì tôi đã hoàn thành:
+<input_content>
+<completed>
 {{work_done}}
-
-- Những gì còn dở dang hoặc cần làm tiếp:
+</completed>
+<pending>
 {{pending}}
-
-- Rủi ro hoặc những chỗ cần cực kỳ cẩn thận:
+</pending>
+<risks>
 {{risks}}
+</risks>
+</input_content>
 
+<instructions>
 Hãy viết cho tôi một bản handoff note chuyên nghiệp gồm:
-1. Tóm tắt hiện trạng hệ thống
-2. Danh sách Checkpoint công việc
-3. Các file/module quan trọng cần lưu tâm
-4. Bước tiếp theo được khuyến nghị.`
+1. Tóm tắt hiện trạng hệ thống.
+2. Danh sách Checkpoint công việc.
+3. Các file/module quan trọng cần lưu tâm.
+4. Bước tiếp theo được khuyến nghị.
+</instructions>`
 });
 
 window.promptRegistry.push({
@@ -42,17 +48,25 @@ window.promptRegistry.push({
         { id: "context", label: "Bối cảnh nhiệm vụ", type: "textarea", required: true },
         { id: "criteria", label: "Acceptance Criteria", type: "textarea", required: true }
     ],
-    template: `Tôi muốn biến vấn đề này thành một task rõ ràng để giao cho người khác (hoặc sub-agent).
+    template: `<system_directive>
+Tôi muốn biến vấn đề này thành một task rõ ràng để giao cho người khác (hoặc sub-agent).
+</system_directive>
 
-Bối cảnh: {{context}}
-
-Tiêu chí nghiệm thu (Acceptance Criteria):
+<input_content>
+<problem_statement>
+{{context}}
+</problem_statement>
+<acceptance_criteria>
 {{criteria}}
+</acceptance_criteria>
+</input_content>
 
+<instructions>
 Hãy viết implementation task spec gồm:
-1. Context & Problem Statement
-2. Goal & Scope
-3. Expected code changes
-4. Risks & Edge cases
-5. Suggested files to inspect.`
+1. Context & Problem Statement.
+2. Goal & Scope.
+3. Expected code changes.
+4. Risks & Edge cases.
+5. Suggested files to inspect.
+</instructions>`
 });

@@ -66,7 +66,7 @@ class Orchestrator:
         self.decision_store = DecisionStore(config.knowledge_dir / "memory")
         self.metrics_logger = RuntimeMetricsLogger(config.runtime_dir)
         self.pre_task_hook = PreTaskHook(config.repo_root)
-        self.post_task_hook = PostTaskHook()
+        self.post_task_hook = PostTaskHook(config.runtime_dir)
         self.on_handoff_hook = OnHandoffHook(config.hub_dir)
 
     def run_task(self, task: dict[str, Any], session_id: str) -> dict[str, Any]:
@@ -232,9 +232,11 @@ class Orchestrator:
 
         handoff_path = self._maybe_create_failure_handoff(
             task=normalized_task,
+            session_id=session_id,
             execution_mode=prepared["execution_mode"],
             verification_report=verification_report,
             final_status=final_status,
+            execution_results=execution_results,
         )
         final_agent_output = self._build_terminal_agent_output(
             execution_mode=prepared["execution_mode"],
@@ -268,6 +270,8 @@ class Orchestrator:
             execution_results=execution_results,
             retries=retry_results,
             handoff_path=handoff_path,
+            session_report_path=Path(post_result["session_report_path"]) if post_result.get("session_report_path") else None,
+            quick_report_path=Path(post_result["quick_report_path"]) if post_result.get("quick_report_path") else None,
         )
         self.decision_store.store_task_decision(task_id, {
             "action": "task_completed" if final_status == "completed" else "task_failed",
@@ -475,7 +479,7 @@ class Orchestrator:
             "runtime_plan_path": str(runtime_plan_path),
             "assigned_role": execution_mode["primary_role"],
             "mode": execution_mode["mode"],
-            "next_action": "complete_and_handoff" if final_status == "completed" else "stop_and_escalate",
+            "next_action": "complete_and_report" if final_status == "completed" else "stop_and_escalate",
             "execution_queue": runtime_plan.get("steps", []),
             "execution_report_path": execution_result.get("execution_report_path"),
             "attempts": attempts,
@@ -485,9 +489,11 @@ class Orchestrator:
     def _maybe_create_failure_handoff(
         self,
         task: dict[str, Any],
+        session_id: str,
         execution_mode: dict[str, Any],
         verification_report: dict[str, Any],
         final_status: str,
+        execution_results: list[dict[str, Any]],
     ) -> Path | None:
         if final_status != "failed":
             return None
@@ -500,10 +506,40 @@ class Orchestrator:
             task_id=task["id"],
             from_role=execution_mode.get("primary_role", "backend"),
             to_role=target_role,
-            completed=[],
-            needs_continuation=verification_report.get("next_context_needs", []),
-            context=f"Verification failed: {verification_report.get('status')}",
+            from_session=session_id,
+            completed=[
+                f"Executed {len(execution_results)} attempt(s).",
+                f"Final verification status: {verification_report.get('status')}.",
+            ],
+            needs_continuation=self._handoff_needs(verification_report),
+            context=[
+                f"Verification failed: {verification_report.get('status')}",
+                f"Recommended next role: {target_role}",
+            ],
+            related_files=self._handoff_related_files(execution_results),
+            open_questions=[],
+            reason="Verification failed after retry budget; another role should continue.",
+            recommended_next_step="Review the verification report, latest execution report, and retry packets before patching.",
         )
+
+    def _handoff_needs(self, verification_report: dict[str, Any]) -> list[str]:
+        needs = list(verification_report.get("next_context_needs", []))
+        for check in verification_report.get("checks", []):
+            if check.get("result") != "failed":
+                continue
+            if check.get("missing_criteria"):
+                needs.extend([f"Fix missing criterion: {item}" for item in check["missing_criteria"]])
+            else:
+                needs.append(f"Resolve failed check: {check.get('name', 'verification')}")
+        return needs or ["Review failure evidence and decide next patch."]
+
+    def _handoff_related_files(self, execution_results: list[dict[str, Any]]) -> list[str]:
+        files: list[str] = []
+        for result in execution_results:
+            for file_path in result.get("changed_files", []):
+                if file_path not in files:
+                    files.append(file_path)
+        return files
 
     def _verification_report_path(self, task_id: str) -> Path:
         return self.config.runtime_dir / "state" / "verification_reports" / f"{task_id}.verification.json"

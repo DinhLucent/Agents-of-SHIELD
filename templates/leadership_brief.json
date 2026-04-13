@@ -1,0 +1,81 @@
+{
+  "schema_version": "2.1-collab",
+  "brief_id": "BRIEF-2026-001",
+  "source": {
+    "created_by": "user",
+    "created_at": "2026-04-12T16:00:00Z",
+    "raw_request": "Improve the login flow and make it easier to verify."
+  },
+  "product": {
+    "problem": "Users need a clearer and more reliable login experience.",
+    "user_value": "Reduce confusion and make failures easier to recover from.",
+    "scope_now": [
+      "Clarify login errors",
+      "Add loading and retry states",
+      "Verify expected behavior"
+    ],
+    "out_of_scope": [
+      "Replace the auth provider",
+      "Redesign the whole account system"
+    ],
+    "acceptance_summary": [
+      "Login failures show actionable errors",
+      "Loading state prevents duplicate submit",
+      "Relevant tests or checks pass"
+    ]
+  },
+  "cto": {
+    "technical_direction": "Keep the existing auth flow and patch only the error/loading handling.",
+    "architecture_impact": "low",
+    "adr_required": false,
+    "adr_reason": "No architecture or contract decision is being changed.",
+    "risk_notes": [
+      "Avoid changing token/session semantics."
+    ],
+    "related_modules": [
+      "auth",
+      "ui/login"
+    ]
+  },
+  "sprint": {
+    "sprint_id": "SPRINT-2026-001",
+    "focus": "Login UX hardening",
+    "priority": "high"
+  },
+  "proposed_tasks": [
+    {
+      "id": "TASK-2026-001",
+      "title": "Improve login error and loading states",
+      "assigned_role": "frontend",
+      "priority": "high",
+      "status": "queued",
+      "related_paths": [
+        "src/auth/login.tsx"
+      ],
+      "acceptance_criteria": [
+        "Loading state is visible during submit",
+        "Duplicate submit is prevented",
+        "Auth failure shows actionable error"
+      ]
+    },
+    {
+      "id": "TASK-2026-002",
+      "title": "Verify login flow behavior",
+      "assigned_role": "qa",
+      "priority": "medium",
+      "status": "queued",
+      "related_paths": [
+        "tests/auth"
+      ],
+      "acceptance_criteria": [
+        "Happy path verified",
+        "Failure path verified",
+        "No unrelated regression found"
+      ]
+    }
+  ],
+  "open_questions": [
+    "Which auth errors should be user-facing vs logged only?"
+  ],
+  "next_step": "Ask the user to approve scope, then convert proposed tasks into task.yaml files."
+}

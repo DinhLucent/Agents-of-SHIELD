@@ -1,0 +1,72 @@
+{
+  "schema_version": "2.1-collab",
+  "task_id": "TASK-2026-001",
+  "title": "Implement the requested task slice",
+  "session_id": "SESSION-2026-04-12-001",
+  "role": "backend",
+  "owner_role": "backend",
+  "owner_session": "SESSION-2026-04-12-001",
+  "role_gate": {
+    "session_role": "backend",
+    "task_assigned_role": "backend",
+    "allowed_to_execute": true,
+    "decision": "claim",
+    "on_mismatch": "Stop work and hand off to the assigned role or Product/CTO."
+  },
+  "context_check": {
+    "checked_sources": [
+      "task contract",
+      "task packet",
+      "runtime plan",
+      "verification report"
+    ],
+    "related_handoffs": [],
+    "related_reports": [],
+    "task_already_done_checked": true
+  },
+  "status": "completed",
+  "summary": "Implemented the requested task slice and verified the expected outcome.",
+  "changed_files": [
+    "control_plane/hooks/post_task.py"
+  ],
+  "verification": {
+    "status": "passed",
+    "checks": []
+  },
+  "result": {
+    "outcome": "completed",
+    "verification_status": "passed",
+    "attempt_count": 1
+  },
+  "blockers": [],
+  "open_questions": [],
+  "handoff_needed": false,
+  "next_owner_role": "backend",
+  "next_step": "Hand off to QA if independent verification is required.",
+  "artifacts": {
+    "task_packet_path": "runtime/tasks/TASK-2026-001.task_packet.json",
+    "verification_report_path": "runtime/reports/TASK-2026-001.verification_report.json"
+  },
+  "report_completeness": {
+    "required_fields": [
+      "task_id",
+      "title",
+      "session_id",
+      "role",
+      "role_gate",
+      "context_check",
+      "status",
+      "summary",
+      "changed_files",
+      "verification",
+      "blockers",
+      "handoff_needed",
+      "next_owner_role",
+      "next_step",
+      "artifacts"
+    ],
+    "missing_fields": [],
+    "complete": true
+  },
+  "updated_at": "2026-04-12T15:00:00Z"
+}

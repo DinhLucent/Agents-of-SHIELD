@@ -1,175 +1,161 @@
-<div align="center">
+# Agents-of-SHIELD
 
-# 🛡️ Agents-of-SHIELD
+Agents-of-SHIELD is a local control plane for coordinating many AI sessions on one software project.
 
-### **Autonomous Development Orchestrator**
+It is not just a task runner.
 
-[![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://python.org)
-[![Architecture](https://img.shields.io/badge/Architecture-V2_Control_Plane-00D4AA)](control_plane/)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+The intended operating model is:
 
-*A local, CLI-driven control plane that routes tasks to specialized agent roles<br>and executes them in a strict **compile → plan → execute → verify** loop.*
-
-</div>
-
----
-
-## Overview
-
-Agents-of-SHIELD replaces manual task management with an automated orchestration engine. Define a task in YAML, and the system classifies it, assigns the right agent role, executes commands locally, verifies the output, and retries or hands off on failure — all without manual intervention.
-
-```
-Task YAML → Classifier → Router → Context Builder → Executor → Verifier → Done/Retry
+```text
+User -> Product + CTO -> Tasks -> Worker sessions -> QA/Reviewer -> Product + CTO -> Dashboard
 ```
 
----
+The execution kernel still supports:
 
-## Quick Start
+```text
+compile -> plan -> run -> verify -> retry
+```
+
+But raw user intent should normally go through Product and CTO before worker execution.
+
+## What SHIELD Solves
+
+SHIELD helps when one long chat session becomes hard to control.
+
+It gives you:
+
+- role-based sessions
+- task ownership
+- leadership briefs
+- session reports
+- handoffs
+- decision logs
+- dashboard context
+- real execution and verification loop
+
+## Process Authority
+
+The canonical session workflow lives in `OPERATING_RULES.md`.
+
+This README is only the entry map. If another doc repeats the workflow differently, follow `OPERATING_RULES.md`.
+
+## Quick Start For A Session
+
+Open a session with a role prompt:
+
+```text
+Onboard into this repo as product-manager-agent.
+Read ONBOARDING.md, DASHBOARD.md, OPERATING_RULES.md, CTO_PRODUCT_WORKFLOW.md, manifest.yaml, and ROLE_SKILL_MATRIX.md.
+Use manifest.yaml plus ROLE_SKILL_MATRIX.md to load only my role persona and task-specific skills.
+Scenario: improve repo.
+Intent: [paste your goal]
+End with a leadership brief or clear next step.
+```
+
+For worker sessions:
+
+```text
+Onboard into this repo as backend-agent.
+Read ONBOARDING.md, manifest.yaml, ROLE_SKILL_MATRIX.md, and the assigned task.
+Use manifest.yaml plus ROLE_SKILL_MATRIX.md to confirm my persona and skills.
+Stay inside the task scope.
+End with a session report or handoff.
+```
+
+## Runtime Commands
+
+Use these after a task exists.
 
 ```bash
-# 1. Compile knowledge indexes (roles, skills, modules, docs)
 python run_orchestrator.py compile
-
-# 2. Preview how a task will be routed and packaged
 python run_orchestrator.py plan path/to/task.yaml
-
-# 3. Execute end-to-end (execute → verify → retry → finalize)
 python run_orchestrator.py run path/to/task.yaml
+python run_orchestrator.py dashboard
+python run_orchestrator.py audit
+python run_orchestrator.py system-test --iterations 1
 ```
 
-### Defining a Task
+`plan` previews classification, routing, context packet, and execution mode.
 
-Copy `templates/task.yaml` and fill in:
+`run` executes commands, verifies results, retries when possible, and finalizes the task.
 
-```yaml
-id: TASK-2026-001
-title: "Fix validation in login endpoint"
-assigned_role: backend
-acceptance_criteria:
-  - "email format validated before save"
-  - "clear error messages returned"
-metadata:
-  execution:
-    primary_commands:
-      - "python -m pytest tests/api/test_login.py"
-    output_files:
-      - src/api/auth/login.py
-```
+`dashboard` prints the CEO/operator view from `.hub/` and `runtime/reports/`.
 
-> **Key rule:** Without `metadata.execution.primary_commands`, the task won't execute. These are the real shell commands the agent runs.
+`audit` runs the serial health check: compile, collaboration template validation, task planning, happy path, retry path, and hard-fail handoff path.
 
----
+`system-test` copies SHIELD into a fresh sandbox and runs zero-build, improve, and fix-with-retry scenarios end-to-end.
 
-## Architecture
+## Core Artifacts
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    run_orchestrator.py                       │
-│                  compile │ plan │ run                        │
-└──────────────┬──────────────────────────────────────────────┘
-               │
-┌──────────────▼──────────────────────────────────────────────┐
-│                     control_plane/                           │
-│                                                              │
-│  ┌────────────┐  ┌────────────┐  ┌───────────────────────┐  │
-│  │ Classifier │→ │   Router   │→ │   Context Builder     │  │
-│  │ task type  │  │ role match │  │ packet + budget        │  │
-│  └────────────┘  └────────────┘  └───────────┬───────────┘  │
-│                                               │              │
-│  ┌────────────────────────────────────────────▼───────────┐  │
-│  │              Execution Engine                          │  │
-│  │  AgentExecutor → TaskStateMachine → Verifier           │  │
-│  │  (commands)      (state tracking)   (lint/test/accept) │  │
-│  └────────────────────────────────────────────────────────┘  │
-│                                                              │
-│  ┌─────────────┐  ┌──────────────┐  ┌────────────────────┐  │
-│  │  Hooks      │  │   Metrics    │  │  Retry / Handoff   │  │
-│  │ pre/post    │  │  per-task    │  │  auto-escalation   │  │
-│  └─────────────┘  └──────────────┘  └────────────────────┘  │
-└──────────────────────────────────────────────────────────────┘
-```
-
-| Component | Role |
-|-----------|------|
-| **Classifier** | Determines task type, priority, and domain |
-| **Router** | Maps task to agent role from `manifest.yaml` |
-| **Context Builder** | Assembles a stateless Task Packet with relevant code/docs |
-| **Executor** | Runs shell commands locally, tracks file changes |
-| **Verifier** | Checks acceptance criteria, lint, typecheck, security |
-| **State Machine** | Manages `queued → executing → verifying → completed/failed` |
-| **Retry Hook** | On verification failure, builds targeted retry packet |
-| **Handoff Hook** | On exhausted retries, creates handoff for another role |
-
----
+| Artifact | Purpose |
+|---|---|
+| `templates/leadership_brief.json` | Product + CTO intake and task proposal |
+| `templates/task.yaml` | Executable task contract |
+| `templates/task_packet.json` | Context packet for execution |
+| `templates/verification_report.json` | Verifier output |
+| `templates/session_report.json` | End-of-session progress report |
+| `templates/handoff.json` | Structured transfer to another role |
+| `templates/decision_log.json` | Durable decision record |
+| `DASHBOARD.md` | Short human/session orientation view |
+| `runtime/reports/session_reports/` | Detailed per-session reports generated by runtime |
+| `runtime/reports/quick_reports/` | Short per-session summaries generated by runtime |
+| `runtime/reports/system_tests/` | Sandbox loop reports for zero-build, improve, and fix/retry validation |
 
 ## Project Structure
 
+```text
+control_plane/              runtime orchestration engine
+  classifier/               task classification
+  router/                   role routing and parallel policy
+  context_builder/          task packet assembly
+  execution/                executor and task state machine
+  verifier/                 test, lint, typecheck, security checks
+  hooks/                    pre-task, post-task, retry, handoff hooks
+  compiler/                 knowledge index builders
+templates/                  frozen contracts and examples
+Skills/                     role and skill definitions
+knowledge/compiled/         generated indexes
+runtime/                    generated runtime artifacts
+.hub/                       active/done/handoff task artifacts
+tools/prompt-builder/       interactive prompt builder
 ```
-├── control_plane/           # Core orchestration engine
-│   ├── classifier/          # Task classification
-│   ├── router/              # Role routing + parallel policy
-│   ├── context_builder/     # Packet assembly
-│   ├── execution/           # Agent executor + state machine
-│   ├── verifier/            # Acceptance, lint, test, security checks
-│   ├── hooks/               # Pre-task, post-task, handoff, retry
-│   ├── compiler/            # Knowledge index builders
-│   └── contracts/           # JSON schema validation
-├── templates/               # Task, packet, and report schemas
-├── tests/fixtures/audit/    # Runnable audit fixtures (happy/retry/fail)
-├── manifest.yaml            # Role + skill configuration
-├── Skills/                  # Agent personas and skill definitions
-├── knowledge/compiled/      # Generated indexes (gitignored, regenerable)
-├── runtime/                 # Ephemeral execution state (gitignored)
-└── run_orchestrator.py      # CLI entrypoint
-```
-
----
 
 ## Audit Suite
 
-Three runnable fixtures for system validation:
-
 ```bash
-# Happy path — passes on first attempt
 python run_orchestrator.py run tests/fixtures/audit/happy_path.yaml
-
-# Retry scenario — fails once, passes on retry
 python run_orchestrator.py run tests/fixtures/audit/retry_scenario.yaml
-
-# Hard fail — exhausts retries, triggers handoff
 python run_orchestrator.py run tests/fixtures/audit/hard_fail.yaml
 ```
 
----
+Or run the combined audit:
 
-## CLI Reference
+```bash
+python run_orchestrator.py audit
+```
 
-| Command | Description |
-|---------|-------------|
-| `python run_orchestrator.py compile` | Build all knowledge indexes |
-| `python run_orchestrator.py compile --include-pool` | Include `.skills_pool/` in skill index |
-| `python run_orchestrator.py plan <task.yaml>` | Preview classification, routing, and packet |
-| `python run_orchestrator.py run <task.yaml>` | Execute full lifecycle with verification |
+For a stronger sandbox check after changing orchestration, classifier, router, templates, or collaboration flow:
 
----
+```bash
+python run_orchestrator.py system-test --iterations 1
+```
 
-## Documentation
+## Important Docs
 
 | Document | Purpose |
-|----------|---------|
-| [BOOTSTRAP_SHIELD.md](BOOTSTRAP_SHIELD.md) | Step-by-step guide for applying SHIELD to another repository |
-| [PROMPT_PACK.md](PROMPT_PACK.md) | Reusable prompts for onboarding, debug, planning, build tasks, and role-specific sessions |
-| [CHEATSHEET.md](CHEATSHEET.md) | Quick reference for running tasks |
-| [SYSTEM_AUDIT.md](SYSTEM_AUDIT.md) | Re-validation workflow after changes |
-| [OPERATING_RULES.md](OPERATING_RULES.md) | Security and execution constraints |
+|---|---|
+| [ONBOARDING.md](ONBOARDING.md) | Boot order for every new role session |
+| [CHEATSHEET.md](CHEATSHEET.md) | Fast operational guide |
+| [PROMPT_PACK.md](PROMPT_PACK.md) | Role-first prompts for zero build, improve repo, and solve issue |
+| [BOOTSTRAP_SHIELD.md](BOOTSTRAP_SHIELD.md) | How to apply SHIELD to another repo |
+| [CTO_PRODUCT_WORKFLOW.md](CTO_PRODUCT_WORKFLOW.md) | Product + CTO leadership workflow |
+| [ROLE_SKILL_MATRIX.md](ROLE_SKILL_MATRIX.md) | Role curriculum: persona, core skills, scenario mapping, outputs |
+| [SYSTEM_AUDIT.md](SYSTEM_AUDIT.md) | Re-validation workflow |
+| [OPERATING_RULES.md](OPERATING_RULES.md) | Shared session protocol, template map, role, report, security, and runtime rules |
 | [GIT_WORKFLOW.md](GIT_WORKFLOW.md) | Git lifecycle conventions |
-| [SOUL.md](SOUL.md) | Philosophy of constrained orchestration |
-| [GENERAL.md](GENERAL.md) | Project onboarding guidelines |
 
----
+Keep one canonical source per concern. Do not create a new workflow doc unless `OPERATING_RULES.md`, `ONBOARDING.md`, `PROMPT_PACK.md`, or `SYSTEM_AUDIT.md` cannot represent it.
 
-<div align="center">
+## One-Line Definition
 
-*Built for deterministic, auditable, autonomous development.*
-
-</div>
+SHIELD is a collaboration control plane for AI development sessions, with a real execution and verification kernel underneath.

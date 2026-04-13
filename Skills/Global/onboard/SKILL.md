@@ -1,71 +1,153 @@
 ---
 name: onboard
-description: "Generates a contextual onboarding document for a new contributor or agent joining the project. Summarizes project state, architecture, conventions, and current priorities relevant to the specified role or area."
-argument-hint: "[role|area]"
+description: "Onboard a SHIELD role session into the current project. Loads the correct system docs, role persona, task context, and task-specific skills without scanning the whole repo."
+argument-hint: "[role] [scenario]"
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Write
+allowed-tools: Read, Glob, Grep
 ---
 
-When this skill is invoked:
+# SHIELD Role Onboarding
 
-1. **Read the CLAUDE.md** for project overview and standards.
+Use this skill when a new AI session joins the project.
 
-2. **Read the relevant agent definition** from `.claude/agents/` if a specific
-   role is specified.
+The goal is not to read everything.
 
-3. **Scan the codebase** for the relevant area:
-   - For programmers: scan `src/` for architecture, patterns, key files
-   - For designers: scan `design/` for existing design documents
-   - For narrative: scan `design/narrative/` for world-building and story docs
-   - For QA: scan `tests/` for existing test coverage
-   - For production: scan `production/` for current sprint and milestone
+The goal is:
 
-4. **Read recent changes** (git log if available) to understand current momentum.
+```text
+Role -> Task -> Minimal context -> Work -> Report or Handoff
+```
 
-5. **Generate the onboarding document**:
+## Workflow
+
+### 1. Resolve Role
+
+If the user provides a role, use it.
+
+Examples:
+
+- `product-manager-agent`
+- `cto-agent`
+- `backend-agent`
+- `frontend-agent`
+- `fullstack-agent`
+- `qa-lead-agent`
+- `lead-programmer-agent`
+- `security-agent`
+
+If no role is provided, infer conservatively:
+
+| Situation | Default role |
+|---|---|
+| Raw idea or unclear intent | `product-manager-agent` |
+| Architecture or system direction | `cto-agent` |
+| Existing task with assigned role | assigned role |
+| Implementation task | `backend-agent`, `frontend-agent`, or `fullstack-agent` |
+| Verification or reproduction | `qa-lead-agent` |
+| Review correctness | `lead-programmer-agent` |
+| Security-sensitive task | `security-agent` |
+
+If still unclear, start as `product-manager-agent`.
+
+### 2. Read Boot Docs
+
+Read these in order:
+
+1. `ONBOARDING.md`
+2. `DASHBOARD.md`
+3. `COLLABORATION_MODEL.md`
+4. `CTO_PRODUCT_WORKFLOW.md`
+5. `OPERATING_RULES.md`
+6. `manifest.yaml`
+7. `ROLE_SKILL_MATRIX.md`
+
+Do not read raw chat history if SHIELD artifacts exist.
+
+### 3. Load Role Curriculum
+
+From `manifest.yaml` and `ROLE_SKILL_MATRIX.md`, identify:
+
+- agent id
+- task role key
+- persona path
+- core skills
+- task-specific skills
+- expected output artifact
+
+From `OPERATING_RULES.md`, identify:
+
+- required sync checks
+- claim conditions
+- verification expectations
+- report or handoff rule
+- required template for the expected output
+
+Read the persona file.
+
+Read only skills needed for the current task.
+
+Do not load every role skill by default.
+
+### 4. Locate Current Work
+
+Use the smallest available source of truth:
+
+- assigned `task.yaml`
+- `leadership_brief`
+- `.hub/active/`
+- `.hub/handoffs/`
+- `runtime/reports/session_reports/`
+- `DASHBOARD.md`
+
+Prefer structured artifacts over full repo scans.
+
+### 5. Produce Onboarding Summary
+
+Return this summary before working:
 
 ```markdown
-# Onboarding: [Role/Area]
+# Session Onboarding: [role]
 
-## Project Summary
-[2-3 sentence summary of what this game is and its current state]
+## Role
+[agent id and task role key]
 
-## Your Role
-[What this role does on this project, key responsibilities, who you report to]
+## Scenario
+[zero build / improve repo / solve issue / assigned task]
 
-## Project Architecture
-[Relevant architectural overview for this role]
+## Loaded Context
+[docs, persona, task, handoff, specific skills]
 
-### Key Directories
-| Directory | Contents | Your Interaction |
-|-----------|----------|-----------------|
+## Current Task
+[task id, objective, acceptance criteria, owner session]
 
-### Key Files
-| File | Purpose | Read Priority |
-|------|---------|--------------|
+## Boundaries
+[what this session should not do]
 
-## Current Standards and Conventions
-[Summary of conventions relevant to this role from CLAUDE.md and agent definition]
+## Expected Output
+[session_report / handoff / leadership_brief / verification_report / decision_log]
 
-## Current State of Your Area
-[What has been built, what is in progress, what is planned next]
+## Required Template
+[template path to read before writing]
 
-## Current Sprint Context
-[What the team is working on now and what is expected of this role]
-
-## Key Dependencies
-[What other roles/systems this role interacts with most]
-
-## Common Pitfalls
-[Things that trip up new contributors in this area]
-
-## First Tasks
-[Suggested first tasks to get oriented and productive]
-
-1. [Read these documents first]
-2. [Review this code/content]
-3. [Start with this small task]
-
-## Questions to Ask
-[Questions the new contributor should ask to get fully oriented]
+## Next Action
+[the smallest safe next step]
 ```
+
+### 6. End Correctly
+
+Every onboarded session must end with one of:
+
+- `session_report`
+- `handoff`
+- `leadership_brief`
+- `verification_report`
+- `decision_log`, only when a durable decision was made
+
+No silent exits.
+
+## Guardrails
+
+- Workers do not start from vague intent.
+- Product and CTO turn vague intent into tasks.
+- QA and reviewers verify and challenge.
+- If role curriculum is missing, stop and ask for a role-system audit.

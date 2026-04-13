@@ -11,7 +11,10 @@
 
 active_agents:
   - "cto-agent"
+  - "product-manager-agent"
+  - "lead-programmer-agent"
   - "backend-agent"
+  - "frontend-agent"
   - "fullstack-agent"
   - "security-agent"
   - "qa-lead-agent"

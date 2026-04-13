@@ -16,6 +16,9 @@
     "goal",
     "summary",
     "rules",
+    "role_gate",
+    "context_check",
+    "reporting_requirements",
     "context_budget",
     "modules",
     "context_fragments",
@@ -73,6 +76,36 @@
     "goal": { "type": "string" },
     "summary": { "type": "string" },
     "rules": { "type": "array", "items": { "type": "string" } },
+    "role_gate": {
+      "type": "object",
+      "required": ["task_assigned_role", "packet_role", "allowed_to_execute", "decision", "on_mismatch"],
+      "properties": {
+        "task_assigned_role": { "type": "string" },
+        "packet_role": { "type": "string" },
+        "allowed_to_execute": { "type": "boolean" },
+        "decision": { "type": "string" },
+        "on_mismatch": { "type": "string" }
+      }
+    },
+    "context_check": {
+      "type": "object",
+      "required": ["must_read_before_work", "task_handoff_refs", "packet_handoff_refs", "rule"],
+      "properties": {
+        "must_read_before_work": { "type": "array", "items": { "type": "string" } },
+        "task_handoff_refs": { "type": "array", "items": { "type": "string" } },
+        "packet_handoff_refs": { "type": "array" },
+        "rule": { "type": "string" }
+      }
+    },
+    "reporting_requirements": {
+      "type": "object",
+      "required": ["required_exit_artifact", "session_report_required_fields", "handoff_required_when"],
+      "properties": {
+        "required_exit_artifact": { "type": "string" },
+        "session_report_required_fields": { "type": "array", "items": { "type": "string" } },
+        "handoff_required_when": { "type": "array", "items": { "type": "string" } }
+      }
+    },
     "context_budget": { "type": "object" },
     "modules": { "type": "array", "items": { "type": "string" } },
     "context_fragments": {

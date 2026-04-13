@@ -1,180 +1,116 @@
 ---
 name: start
-description: "First-time onboarding — asks where you are, then guides you to the right workflow. No assumptions."
-argument-hint: "[no arguments]"
+description: "Start a SHIELD workflow by detecting whether the user needs zero build, improve repo, solve issue, or assigned-task execution."
+argument-hint: "[optional: intent]"
 user-invocable: true
-allowed-tools: Read, Glob, Grep, AskUserQuestion
+allowed-tools: Read, Glob, Grep
 ---
 
-# Guided Onboarding
+# SHIELD Start
 
-This skill is the entry point for new users. It does NOT assume you have a game
-idea, an engine preference, or any prior experience. It asks first, then routes
-you to the right workflow.
+Use this skill when the user says they want to begin applying SHIELD, but has not yet chosen the right workflow.
 
----
+Do not assume they need code immediately.
+
+First route the situation.
 
 ## Workflow
 
-### 1. Detect Project State (Silent)
+### 1. Detect Project State
 
-Before asking anything, silently gather context so you can tailor your guidance.
-Do NOT show these results unprompted — they inform your recommendations, not
-the conversation opener.
+Silently check for:
 
-Check:
-- **Engine configured?** Read `.claude/docs/technical-preferences.md`. If the
-  Engine field contains `[TO BE CONFIGURED]`, the engine is not set.
-- **Game concept exists?** Check for `design/gdd/game-concept.md`.
-- **Source code exists?** Glob for source files in `src/` (`*.gd`, `*.cs`,
-  `*.cpp`, `*.h`, `*.rs`, `*.py`, `*.js`, `*.ts`).
-- **Prototypes exist?** Check for subdirectories in `prototypes/`.
-- **Design docs exist?** Count markdown files in `design/gdd/`.
-- **Production artifacts?** Check for files in `production/sprints/` or
-  `production/milestones/`.
+- `README.md`
+- `ONBOARDING.md`
+- `DASHBOARD.md`
+- `manifest.yaml`
+- `ROLE_SKILL_MATRIX.md`
+- `templates/task.yaml`
+- `.hub/active/`
+- `.hub/handoffs/`
+- `runtime/reports/session_reports/`
+- source directories such as `src/`, `app/`, `services/`, `packages/`, `lib/`
+- test directories such as `tests/`, `test/`, `e2e/`
 
-Store these findings internally. You will use them to validate the user's
-self-assessment and to tailor follow-up recommendations.
+Use this only to tailor the recommendation.
 
----
+### 2. Classify The User Intent
 
-### 2. Ask Where the User Is
+Choose one:
 
-This is the first thing the user sees. Present these 4 options clearly:
+| Situation | Workflow | First role |
+|---|---|---|
+| User wants to create something from zero | `zero build` | `product-manager-agent` |
+| User cloned or has an existing repo to improve | `improve repo` | `product-manager-agent` |
+| User has a concrete bug, issue, failing test, or incident | `solve issue` | `qa-lead-agent` or `product-manager-agent` |
+| User has a structured task already | `assigned task` | assigned role |
 
-> **Welcome to Claude Code Game Studios!**
->
-> Before I suggest anything, I'd like to understand where you're starting from.
-> Where are you at with your game idea right now?
->
-> **A) No idea yet** — I don't have a game concept at all. I want to explore
-> and figure out what to make.
->
-> **B) Vague idea** — I have a rough theme, feeling, or genre in mind
-> (e.g., "something with space" or "a cozy farming game") but nothing concrete.
->
-> **C) Clear concept** — I know the core idea — genre, basic mechanics, maybe
-> a pitch sentence — but haven't formalized it into documents yet.
->
-> **D) Existing work** — I already have design docs, prototypes, code, or
-> significant planning done. I want to organize or continue the work.
+If the intent is vague, default to `improve repo` for existing code and `zero build` for empty projects.
 
-Wait for the user's answer. Do not proceed until they respond.
+### 3. Recommend The Next Session
 
----
+Give the user the next session prompt.
 
-### 3. Route Based on Answer
+For raw intent:
 
-#### If A: No idea yet
+```text
+Onboard into this repo as product-manager-agent.
+Read ONBOARDING.md, DASHBOARD.md, COLLABORATION_MODEL.md, CTO_PRODUCT_WORKFLOW.md, OPERATING_RULES.md, manifest.yaml, and ROLE_SKILL_MATRIX.md.
+Scenario: [zero build / improve repo / solve issue]
+Intent: [paste the user goal]
+End with a leadership brief or clear next step.
+```
 
-The user needs creative exploration before anything else. Engine choice,
-technical setup — all of that comes later.
+For implementation:
 
-1. Acknowledge that starting from zero is completely fine
-2. Briefly explain what `/brainstorm` does (guided ideation using professional
-   frameworks — MDA, player psychology, verb-first design)
-3. Recommend running `/brainstorm open` as the next step
-4. Show the recommended path:
-   - `/brainstorm` — discover your game concept
-   - `/setup-engine` — configure the engine (brainstorm will recommend one)
-   - `/map-systems` — decompose the concept into systems and plan GDD writing order
-   - `/prototype` — test the core mechanic
-   - `/sprint-plan` — plan the first sprint
+```text
+Onboard into this repo as [assigned-role-agent].
+Read ONBOARDING.md, DASHBOARD.md, OPERATING_RULES.md, manifest.yaml, ROLE_SKILL_MATRIX.md, and the assigned task/handoff.
+Stay inside the task scope.
+End with a session report or handoff.
+```
 
-#### If B: Vague idea
+### 4. Do Not Skip Leadership
 
-The user has a seed but needs help growing it into a concept.
+Workers should not receive vague goals like:
 
-1. Ask them to share their vague idea — even a few words is enough
-2. Validate the idea as a starting point (don't judge or redirect)
-3. Recommend running `/brainstorm [their hint]` to develop it
-4. Show the recommended path:
-   - `/brainstorm [hint]` — develop the idea into a full concept
-   - `/setup-engine` — configure the engine
-   - `/map-systems` — decompose the concept into systems and plan GDD writing order
-   - `/prototype` — test the core mechanic
-   - `/sprint-plan` — plan the first sprint
+```text
+Improve this repo however you think.
+```
 
-#### If C: Clear concept
+Instead Product/CTO should produce:
 
-The user knows what they want to make but hasn't documented it.
+- scope
+- acceptance criteria
+- task breakdown
+- role assignment
+- verification expectation
 
-1. Ask 2-3 follow-up questions to understand their concept:
-   - What's the genre and core mechanic? (one sentence)
-   - Do they have an engine preference, or need help choosing?
-   - What's the rough scope? (jam game, small project, large project)
-2. Based on their answers, offer two paths:
-   - **Formalize first**: Run `/brainstorm` to structure the concept into a
-     proper game concept document with pillars, MDA analysis, and scope tiers
-   - **Jump to engine setup**: If they're confident in their concept, go
-     straight to `/setup-engine` and write the GDD manually afterward
-3. Show the recommended path (adapted to their choice):
-   - `/brainstorm` or `/setup-engine` (their pick)
-   - `/design-review` — validate the concept doc
-   - `/map-systems` — decompose the concept into individual systems with dependencies and priorities
-   - `/design-system` — author per-system GDDs (guided, section-by-section)
-   - `/architecture-decision` — make first technical decisions
-   - `/sprint-plan` — plan the first sprint
+### 5. Output Format
 
-#### If D: Existing work
+Return:
 
-The user has artifacts already. Figure out what exists and what's missing.
+```markdown
+# SHIELD Start Recommendation
 
-1. Share what you found in Step 1 (now it's relevant):
-   - "I can see you have [X source files / Y design docs / Z prototypes]..."
-   - "Your engine is [configured as X / not yet configured]..."
-2. Recommend running `/project-stage-detect` for a full analysis
-3. If the engine isn't configured, note that `/setup-engine` should come first
-4. Show the recommended path:
-   - `/project-stage-detect` — full gap analysis
-   - `/setup-engine` — if not configured
-   - `/design-system` — if systems index exists but GDDs are incomplete
-   - `/gate-check` — validate readiness for next phase
-   - `/sprint-plan` — organize the work
+## Detected Workflow
+[zero build / improve repo / solve issue / assigned task]
 
----
+## First Session
+[role]
 
-### 4. Confirm Before Proceeding
+## Why
+[short reason]
 
-After presenting the recommended path, ask the user which step they'd like
-to take first. Never auto-run the next skill.
+## Copy-Paste Prompt
+[prompt]
 
-> "Would you like to start with [recommended first step], or would you prefer
-> to do something else first?"
+## Next Artifact
+[leadership_brief / task.yaml / session_report / handoff]
+```
 
----
+## Guardrail
 
-### 5. Hand Off
+Keep it simple.
 
-When the user chooses their next step, let them invoke the skill themselves
-or offer to run it for them. Either way, the `/start` skill's job is done
-once the user has a clear next action.
-
----
-
-## Edge Cases
-
-- **User picks D but project is empty**: Gently redirect — "It looks like the
-  project is a fresh template with no artifacts yet. Would Path A or B be a
-  better fit?"
-- **User picks A but project has code**: Mention what you found — "I noticed
-  there's already code in `src/`. Did you mean to pick D (existing work)? Or
-  would you like to start fresh with a new concept?"
-- **User is returning (engine configured, concept exists)**: Skip onboarding
-  entirely — "It looks like you're already set up! Your engine is [X] and you
-  have a game concept at `design/gdd/game-concept.md`. Want to pick up where
-  you left off? Try `/sprint-plan` or just tell me what you'd like to work on."
-- **User doesn't fit any option**: Let them describe their situation in their
-  own words and adapt. The 4 options are starting points, not a prison.
-
----
-
-## Collaborative Protocol
-
-This skill follows the collaborative design principle:
-
-1. **Ask first** — never assume the user's state or intent
-2. **Present options** — give clear paths, not mandates
-3. **User decides** — they pick the direction
-4. **No auto-execution** — recommend the next skill, don't run it without asking
-5. **Adapt** — if the user's situation doesn't fit a template, listen and adjust
+The start skill routes work. It does not redesign the system.

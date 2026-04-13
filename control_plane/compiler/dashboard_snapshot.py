@@ -38,8 +38,26 @@ def build_dashboard_snapshot(repo_root: Path) -> Path:
         recent = sorted(handoffs_dir.glob("*"), key=lambda path: path.stat().st_mtime, reverse=True)
         snapshot["recent_handoffs"] = [str(path.relative_to(repo_root)) for path in recent[:5]]
 
+    active_dir = repo_root / ".hub" / "active"
+    if active_dir.exists():
+        snapshot["active_tasks"] = _load_json_summaries(active_dir, repo_root, limit=20)
+
+    done_dir = repo_root / ".hub" / "done"
+    if done_dir.exists():
+        snapshot["recent_done"] = _load_json_summaries(done_dir, repo_root, limit=10)
+
+    reports_dir = repo_root / "runtime" / "reports" / "session_reports"
+    if reports_dir.exists():
+        snapshot["recent_session_reports"] = _load_json_summaries(reports_dir, repo_root, limit=10)
+
+    system_tests_dir = repo_root / "runtime" / "reports" / "system_tests"
+    if system_tests_dir.exists():
+        snapshot["recent_system_tests"] = _load_system_test_summaries(system_tests_dir, repo_root, limit=5)
+
     out_path = out_dir / "dashboard_snapshot.json"
-    out_path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False), encoding="utf-8")
+    tmp_path = out_path.with_suffix(".json.tmp")
+    tmp_path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False), encoding="utf-8")
+    tmp_path.replace(out_path)
     return out_path
 
 
@@ -78,6 +96,44 @@ def _extract_focus_modules(text: str) -> list[str]:
     for match in re.finditer(r"domain[:\s]+(\w+)", text, re.IGNORECASE):
         modules.append(match.group(1))
     return sorted(set(modules))
+
+
+def _load_json_summaries(directory: Path, repo_root: Path, limit: int) -> list[dict[str, Any]]:
+    summaries: list[dict[str, Any]] = []
+    recent = sorted(directory.glob("*.json"), key=lambda path: path.stat().st_mtime, reverse=True)
+    for path in recent[:limit]:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        summaries.append({
+            "path": str(path.relative_to(repo_root)),
+            "task_id": payload.get("task_id"),
+            "title": payload.get("title") or payload.get("task_title") or "",
+            "status": payload.get("status", ""),
+            "owner_role": payload.get("owner_role") or payload.get("role", ""),
+            "owner_session": payload.get("owner_session") or payload.get("session_id", ""),
+            "updated_at": payload.get("updated_at") or payload.get("completed_at") or payload.get("created_at", ""),
+        })
+    return summaries
+
+
+def _load_system_test_summaries(directory: Path, repo_root: Path, limit: int) -> list[dict[str, Any]]:
+    summaries: list[dict[str, Any]] = []
+    recent = sorted(directory.glob("*.json"), key=lambda path: path.stat().st_mtime, reverse=True)
+    for path in recent[:limit]:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        summaries.append({
+            "path": str(path.relative_to(repo_root)),
+            "status": payload.get("status", ""),
+            "iterations": payload.get("iterations", 0),
+            "failure_count": len(payload.get("failures", [])),
+            "completed_at": payload.get("completed_at", ""),
+        })
+    return summaries
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ import yaml
 
 _DEFAULT_TASK_TYPES: dict[str, list[str]] = {
     "cto": ["architecture", "review", "planning"],
+    "product": ["planning", "feature", "documentation"],
     "backend": ["bugfix", "feature", "refactor"],
     "frontend": ["bugfix", "feature", "refactor"],
     "fullstack": ["bugfix", "feature", "refactor"],
@@ -20,6 +21,16 @@ _DEFAULT_TASK_TYPES: dict[str, list[str]] = {
     "docs": ["documentation"],
     "reviewer": ["review"],
     "producer": ["planning", "sprint"],
+    "ui": ["bugfix", "feature", "refactor"],
+    "ux": ["review", "feature"],
+}
+
+_ROLE_ALIASES: dict[str, str] = {
+    "product-manager": "product",
+    "lead-programmer": "reviewer",
+    "qa-lead": "qa",
+    "ui-programmer": "ui",
+    "ux-designer": "ux",
 }
 
 
@@ -45,9 +56,10 @@ def compile_roles(repo_root: Path) -> Path:
     for agent in agents_list:
         agent_id = agent.get("id", "")
         role_key = _normalise_role_key(agent_id)
+        default_role_key = _ROLE_ALIASES.get(role_key, role_key)
         runtime = agent.get("runtime", {})
 
-        compiled[role_key] = {
+        record = {
             "agent_id": agent_id,
             "name": agent.get("name", ""),
             "persona_path": agent.get("persona", ""),
@@ -55,7 +67,7 @@ def compile_roles(repo_root: Path) -> Path:
             "active": agent_id in active_ids,
             "allowed_task_types": runtime.get(
                 "allowed_task_types",
-                _DEFAULT_TASK_TYPES.get(role_key, ["bugfix", "feature"]),
+                _DEFAULT_TASK_TYPES.get(default_role_key, ["bugfix", "feature"]),
             ),
             "required_context_types": runtime.get(
                 "required_context", ["task_packet", "code", "tests"],
@@ -67,6 +79,10 @@ def compile_roles(repo_root: Path) -> Path:
             "max_parallel_tasks": runtime.get("max_parallel_tasks", 1),
             "memory_scope": runtime.get("memory_scope", "module"),
         }
+        compiled[role_key] = record
+        alias = _ROLE_ALIASES.get(role_key)
+        if alias:
+            compiled[alias] = dict(record)
 
     out_path = output_dir / "role_index.json"
     out_path.write_text(json.dumps(compiled, indent=2, ensure_ascii=False), encoding="utf-8")

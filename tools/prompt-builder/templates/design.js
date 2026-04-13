@@ -13,17 +13,25 @@ window.promptRegistry.push({
         { id: "pain_points", label: "Điểm yếu/Nỗi đau", type: "textarea", required: true, placeholder: "Tại sao cần redesign?" },
         { id: "keep_list", label: "Thứ cần giữ lại", type: "text" }
     ],
-    template: `Tôi muốn thiết kế bản V2 cho hệ thống.
+    template: `<system_directive>
+Tôi muốn thiết kế bản V2 cho hệ thống.
+</system_directive>
 
-Hệ hiện tại:
+<input_content>
+<current_state>
 {{current_state}}
+</current_state>
 
-Vấn đề chính của bản hiện tại:
+<pain_points>
 {{pain_points}}
+</pain_points>
+</input_content>
 
-Những gì tuyệt đối phải giữ lại:
-{{keep_list}}
+<constraints>
+Những gì tuyệt đối phải giữ lại: {{keep_list}}
+</constraints>
 
+<instructions>
 Hãy tạo design spec gồm:
 1. Mục tiêu V2 và Non-goals
 2. Kiến trúc khối (Block architecture)
@@ -32,7 +40,8 @@ Hãy tạo design spec gồm:
 5. Data model hoặc State model
 6. Luồng chạy chuẩn (Happy path)
 7. Chiến lược Migration từ V1 sang V2
-8. Definition of Done.`
+8. Definition of Done.
+</instructions>`
 });
 
 window.promptRegistry.push({
@@ -46,14 +55,20 @@ window.promptRegistry.push({
         { id: "option_a", label: "Phương án A", type: "textarea", required: true },
         { id: "option_b", label: "Phương án B", type: "textarea", required: true }
     ],
-    template: `Tôi đang phân vân giữa 2 hướng kiến trúc. Hãy so sánh giúp tôi.
+    template: `<system_directive>
+Tôi đang phân vân giữa 2 hướng kiến trúc. Hãy so sánh giúp tôi.
+</system_directive>
 
-Phương án A:
+<input_content>
+<option_a>
 {{option_a}}
-
-Phương án B:
+</option_a>
+<option_b>
 {{option_b}}
+</option_b>
+</input_content>
 
+<instructions>
 Tiêu chí so sánh:
 - Độ phức tạp & chi phí vận hành
 - Khả năng maintain & debug
@@ -61,7 +76,8 @@ Tiêu chí so sánh:
 - Độ an toàn khi migrate
 
 Hãy:
-1. So sánh từng tiêu chí cụ thể
-2. Nêu tradeoff thực tế (được gì, mất gì)
-3. Đề xuất phương án khuyên dùng và lý do.`
+1. So sánh từng tiêu chí cụ thể.
+2. Nêu tradeoff thực tế (được gì, mất gì).
+3. Đề xuất phương án khuyên dùng và lý do.
+</instructions>`
 });

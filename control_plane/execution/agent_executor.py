@@ -26,6 +26,10 @@ class AgentExecutor:
         attempt: int = 1,
     ) -> dict[str, Any]:
         """Execute the runtime plan and return a structured execution result."""
+        role_gate = packet.get("role_gate", {})
+        if role_gate.get("allowed_to_execute") is False:
+            return self._role_gate_blocked_result(task, packet, runtime_plan, attempt, role_gate)
+
         execution_config = self._execution_config(task, attempt)
         candidate_paths = self._candidate_paths(packet, execution_config)
         baseline_snapshot = self._snapshot_paths(candidate_paths)
@@ -85,6 +89,48 @@ class AgentExecutor:
             "run_tests": bool(packet.get("tests")),
             "stack_trace": stack_trace,
             "details": failed_step.get("details", "") if failed_step else "Execution completed successfully",
+        }
+        execution_result["execution_report_path"] = str(
+            self._write_execution_report(task["id"], attempt, execution_result)
+        )
+        return execution_result
+
+    def _role_gate_blocked_result(
+        self,
+        task: dict[str, Any],
+        packet: dict[str, Any],
+        runtime_plan: dict[str, Any],
+        attempt: int,
+        role_gate: dict[str, Any],
+    ) -> dict[str, Any]:
+        details = (
+            "Role gate blocked execution: "
+            f"packet_role={role_gate.get('packet_role')} "
+            f"task_assigned_role={role_gate.get('task_assigned_role')}"
+        )
+        step_result = {
+            "name": "primary_execute",
+            "role": packet.get("role", task.get("assigned_role", "unknown")),
+            "result": "failed",
+            "status": "blocked",
+            "details": details,
+            "commands": [],
+            "stdout_tail": "",
+            "stderr_tail": details,
+        }
+        execution_result = {
+            "task_id": task["id"],
+            "attempt": attempt,
+            "status": "failed",
+            "mode": runtime_plan.get("mode", packet.get("mode", "solo")),
+            "step_results": [step_result],
+            "changed_files": [],
+            "output_files": [],
+            "satisfied_criteria": [],
+            "test_paths": packet.get("tests", []),
+            "run_tests": False,
+            "stack_trace": "",
+            "details": details,
         }
         execution_result["execution_report_path"] = str(
             self._write_execution_report(task["id"], attempt, execution_result)

@@ -1,0 +1,38 @@
+{
+  "schema_version": "2.1-collab",
+  "task_id": "TASK-2026-001",
+  "from_session": "SESSION-2026-04-12-001",
+  "from_role": "backend",
+  "to_role": "qa",
+  "handoff_gate": {
+    "from_role": "backend",
+    "to_role": "qa",
+    "allowed_reason": true,
+    "rule": "Use handoff when work needs another role, role mismatch, blocker, failed verification, scope change, or security/release review."
+  },
+  "reason": "Implementation complete and ready for independent verification.",
+  "completed": [
+    "Implemented the requested code changes.",
+    "Ran the primary execution command successfully."
+  ],
+  "needs_continuation": [
+    "Verify acceptance criteria on the changed files.",
+    "Confirm there is no regression in related tests."
+  ],
+  "required_context": [
+    "Latest session report",
+    "Verification expectations",
+    "Changed files list"
+  ],
+  "related_files": [
+    "control_plane/hooks/post_task.py"
+  ],
+  "evidence": [
+    "Latest session report",
+    "Verification expectations",
+    "Changed files list"
+  ],
+  "open_questions": [],
+  "recommended_next_step": "Run QA verification and either close the task or create a targeted follow-up task.",
+  "created_at": "2026-04-12T15:10:00Z"
+}

@@ -16,26 +16,33 @@ window.promptRegistry.push({
         { id: "area", label: "Vùng nghi ngờ", type: "text" },
         { id: "strategy", label: "Chiến thuật fix", type: "select", options: ["Patch nhỏ (ưu tiên)", "Refactor & Fix", "Rewrite đoạn lỗi"], default: "Patch nhỏ (ưu tiên)" }
     ],
-    template: `Tôi muốn debug một lỗi runtime cụ thể.
+    template: `<system_directive>
+Tôi muốn debug một lỗi runtime cụ thể.
+</system_directive>
 
-Thông tin:
+<context>
 - Hiện tượng: {{symptom}}
 - Hành vi kỳ vọng: {{expected}}
-- Cách tái hiện: {{repro}}
-- Log/error: 
-\`\`\`
-{{log}}
-\`\`\`
 - Phạm vi nghi ngờ: {{area}}
+- Chiến thuật ưu tiên: {{strategy}}
+</context>
 
-Chiến thuật ưu tiên: {{strategy}}
+<input_content>
+<reproduction>
+{{repro}}
+</reproduction>
+<logs>
+{{log}}
+</logs>
+</input_content>
 
-Hãy làm theo thứ tự:
-1. Xác định luồng code liên quan trực tiếp
-2. Nêu 3-5 giả thuyết lỗi theo xác suất
-3. Chỉ ra file/function cần đọc trước
-4. Đề xuất patch nhỏ nhất hợp lý
-5. Nêu rủi ro regression và test cần thêm.`
+<instructions>
+1. Xác định luồng code liên quan trực tiếp.
+2. Nêu 3-5 giả thuyết lỗi theo xác suất.
+3. Chỉ ra file/function cần đọc trước.
+4. Đề xuất patch nhỏ nhất hợp lý.
+5. Nêu rủi ro regression và test cần thêm.
+</instructions>`
 });
 
 window.promptRegistry.push({
@@ -51,16 +58,20 @@ window.promptRegistry.push({
         { id: "fail_rate", label: "Tần suất fail", type: "text", default: "2/10 lần" },
         { id: "fail_type", label: "Dấu hiệu", type: "select", options: ["Timeout", "Race Condition", "Data Dependency", "Randomness"], required: true }
     ],
-    template: `Tôi muốn điều tra flaky test {{test_name}}.
+    template: `<system_directive>
+Tôi muốn điều tra flaky test {{test_name}}.
+</system_directive>
 
-Thông tin:
+<context>
 - Tần suất fail: {{fail_rate}}
 - Dấu hiệu: {{fail_type}}
+</context>
 
-Hãy:
-1. Nêu các nguyên nhân flaky có khả năng nhất cho case này
-2. Tìm điểm nondeterminism trong code/test
-3. Chỉ ra chỗ đang phụ thuộc time / order / shared state / network
-4. Đề xuất cách sửa để test ổn định
-5. Đề xuất cách tái hiện flaky (nếu có)`
+<instructions>
+1. Nêu các nguyên nhân flaky có khả năng nhất cho case này.
+2. Tìm điểm nondeterminism trong code/test.
+3. Chỉ ra chỗ đang phụ thuộc time / order / shared state / network.
+4. Đề xuất cách sửa để test ổn định.
+5. Đề xuất cách tái hiện flaky (nếu có).
+</instructions>`
 });

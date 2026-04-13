@@ -2,6 +2,10 @@
 
 Use this document when you change the control plane itself, not just an individual task.
 
+This file defines validation and regression checks only.
+
+It should not introduce a competing session workflow; use `OPERATING_RULES.md` for live process.
+
 This repository already verifies single tasks through:
 
 - `compile`
@@ -12,6 +16,13 @@ This repository already verifies single tasks through:
 - metrics
 
 That is not enough to prove the system still works after control-plane changes.
+
+It is also not enough after collaboration-flow changes.
+
+SHIELD now has two health layers:
+
+- execution health: can it run and verify tasks
+- collaboration health: can many role sessions coordinate without losing context
 
 This document defines the manual re-validation workflow for the whole runtime.
 
@@ -31,12 +42,19 @@ Run a repeatable system audit after changing any of these areas:
 - runtime metrics
 - frozen contracts
 - compile layer
+- onboarding docs
+- prompt pack
+- role skill matrix
+- Product/CTO workflow
+- session report or handoff contracts
+- shared session protocol in `OPERATING_RULES.md`
 
 Goal:
 
 - catch regressions early
 - avoid re-thinking the whole architecture after every change
 - keep the control plane deterministic and debuggable
+- keep multi-session collaboration coherent
 
 ## Audit Levels
 
@@ -65,6 +83,9 @@ Check:
 - metrics file is generated
 - verification passes for the happy-path task
 - no import error occurs
+- `ONBOARDING.md`, `PROMPT_PACK.md`, and `DASHBOARD.md` do not contradict the Product/CTO-first workflow
+- `OPERATING_RULES.md` still contains the universal session protocol and template map
+- core role personas and skill paths still exist
 
 ### Level 2: Runtime Regression
 
@@ -94,6 +115,7 @@ Check:
 - paired mode changes runtime behavior
 - metrics capture execution attempts and verifier status
 - `.hub/done/` and `.hub/handoffs/` outputs are correct
+- session report and handoff contracts still match the docs
 
 ### Level 3: Full System Revalidation
 
@@ -105,6 +127,8 @@ Use this after:
 - module index changes
 - role or routing model changes
 - cleanup of legacy files
+- onboarding or prompt-pack restructuring
+- collaboration contract changes
 
 Run:
 
@@ -133,6 +157,43 @@ Check:
 - state transitions remain valid
 - metrics remain present per run
 - generated artifacts match current contracts
+- Product/CTO-first docs still route raw intent before worker execution
+- `ROLE_SKILL_MATRIX.md` still matches `manifest.yaml` for core role IDs
+- every session output type points to a real template
+
+### Level 4: Collaboration Revalidation
+
+Use this after:
+
+- role workflow changes
+- role curriculum changes
+- shared session protocol changes
+- onboarding changes
+- prompt pack changes
+- dashboard guidance changes
+- collaboration artifact changes
+
+Manual scenario:
+
+1. Open a Product session prompt from `PROMPT_PACK.md`.
+2. Create or inspect a `leadership_brief`.
+3. Route the result to CTO for technical decomposition.
+4. Convert one task into `templates/task.yaml` shape.
+5. Confirm the worker role appears in `ROLE_SKILL_MATRIX.md`.
+6. Run `plan` on that task.
+7. Simulate a worker session report using `templates/session_report.json`.
+8. Simulate a QA or reviewer handoff using `templates/handoff.json`.
+9. Confirm `DASHBOARD.md` still gives a new session enough context without reading chat.
+
+Check:
+
+- raw intent does not go directly to worker roles
+- Product owns problem/scope/acceptance
+- CTO owns technical direction/ADR/task decomposition
+- worker prompts require assigned tasks
+- role prompts load only the persona and task-specific skills
+- every session ends with report or handoff
+- dashboard stays short and points to artifacts
 
 ## Required Scenarios
 
@@ -184,6 +245,22 @@ Must prove:
 - metrics capture failure
 - state history is complete
 
+### Scenario D: Collaboration Path
+
+Task type:
+
+- raw user intent
+- requires Product/CTO decomposition
+- then one worker task and one QA check
+
+Must prove:
+
+- leadership brief is created before worker execution
+- task has an assigned role and acceptance criteria
+- worker session prompt stays in role
+- session report captures changed files, result, blockers, and next step
+- QA or reviewer can continue from artifacts without reading chat history
+
 ## Required Metrics
 
 Every audited run must produce metrics containing at least:
@@ -220,12 +297,14 @@ Use this table to decide the minimum audit level.
 | Change Area | Minimum Audit |
 |---|---|
 | README, CHEATSHEET, non-runtime docs | Quick Recheck |
+| ONBOARDING, PROMPT_PACK, DASHBOARD, OPERATING_RULES | Collaboration Revalidation |
 | Metrics logger, summaries, post-task hooks | Quick Recheck |
 | Orchestrator flow | Runtime Regression |
 | Executor or runtime planner | Runtime Regression |
 | Verifier or retry hook | Runtime Regression |
 | State machine | Runtime Regression |
 | Contracts or templates | Full System Revalidation |
+| Session report, handoff, decision log, leadership brief contracts | Full System Revalidation + Collaboration Revalidation |
 | Compile layer | Full System Revalidation |
 | Retriever or module index | Full System Revalidation |
 | Legacy cleanup affecting active manifests or docs | Full System Revalidation |
@@ -240,6 +319,8 @@ The audit passes only when all of these are true:
 - retry path adds targeted context
 - hard-fail path escalates cleanly
 - metrics exist for every audited run
+- session reports include role gate, context check, verification, handoff decision, next owner, and completeness gate
+- handoffs include handoff gate, required context, evidence, and recommended next step
 - small task packets remain small
 - no stale compiled or runtime artifacts confuse the results
 
@@ -255,10 +336,24 @@ Treat the audit as failed if any of these happen:
 - runtime behavior does not change between `solo` and `paired`
 - docs instruct users to follow a legacy workflow that conflicts with the V2 runtime
 
-## Current Limitation
+## Automated Commands
 
-There is no single `audit` command yet.
+Use the serial audit command for template, docs, and baseline runtime checks:
 
-Until that exists, this document is the required manual audit procedure.
+```bash
+python run_orchestrator.py audit
+```
 
-If the team later adds `python run_orchestrator.py audit`, that command should implement this document rather than invent a different workflow.
+Use the sandbox system test after changing orchestration, classifier, router, execution, retry, or collaboration flow:
+
+```bash
+python run_orchestrator.py system-test --iterations 1
+```
+
+`system-test` copies SHIELD into a fresh sandbox and runs:
+
+- zero-build simple website
+- improve simple website
+- solve-issue retry flow
+
+Use the manual steps in this document when you need deeper inspection than the command output provides.

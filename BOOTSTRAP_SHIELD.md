@@ -2,120 +2,82 @@
 
 How to apply SHIELD to another repository.
 
-This guide is for the most common case:
+## Pick An Adoption Mode
 
-- you cloned an existing repo from somewhere else
-- you want to improve it, fix issues, or continue development
-- you want to use SHIELD without guessing the setup
+| Mode | Use when | What you copy |
+|---|---|---|
+| Prompt-only | quick exploration, short task, unsure repo | `PROMPT_PACK.md`, `ONBOARDING.md`, `CHEATSHEET.md`, `tools/prompt-builder/` |
+| Full runtime | long-term work, repeated tasks, need reports/handoffs/verification | `control_plane/`, `run_orchestrator.py`, `templates/`, `manifest.yaml`, docs |
 
-## Important Rule
+If unsure, start Prompt-only.
 
-With the current architecture, SHIELD should live at the **root of the target repository**.
+## Recommended First Step
 
-Do **not** place it under a subfolder like:
+Do not start by opening many worker sessions.
+
+Start with Product and CTO:
 
 ```text
-my-app/shield/
+Product -> CTO -> tasks -> worker roles -> QA/reviewer
 ```
 
-The current CLI uses the folder that contains `run_orchestrator.py` as the repository root.
+## Path A: Prompt-Only Adoption
 
-## Two Adoption Modes
-
-| Mode | Use when | What you use |
-|------|----------|--------------|
-| Prompt-only | New repo, short engagement, still exploring | `PROMPT_PACK.md`, Prompt Builder, `GENERAL.md` |
-| Full runtime | Long-term repo, real execution workflow needed | `control_plane/`, `run_orchestrator.py`, `templates/`, `manifest.yaml` |
-
-If you are unsure, start with **Prompt-only** first.
-
----
-
-## Path A: Prompt-only Adoption
-
-Use this when:
-
-- you just cloned the repo
-- you are still learning the codebase
-- you do not want to embed SHIELD runtime yet
-
-### Steps
+Use this for a cloned repo you are still learning.
 
 1. Clone the target repo.
-2. Run the target repo locally.
-3. Make sure build, start, and tests work.
-4. Use `PROMPT_PACK.md` and Prompt Builder to:
-   - understand the repo
-   - create an improvement plan
-   - fix small issues
-   - plan the first tasks
-5. Write a short `PROJECT_CONTEXT.md` in the target repo.
-6. Pick one small real task and finish it.
-
-### Recommended order
-
-1. Understand the repo
-2. Write context
-3. Validate with a small task
-4. Only then decide whether to embed SHIELD runtime
-
----
+2. Make the target repo run locally.
+3. Read its `README`, configs, docs, and entrypoints.
+4. Open a Product session using `PROMPT_PACK.md`.
+5. Create a `leadership_brief`.
+6. Open CTO only if architecture impact exists.
+7. Create 1-3 small tasks.
+8. Open worker sessions only for those tasks.
+9. End each session with report or handoff.
 
 ## Path B: Full Runtime Adoption
 
-Use this when:
+Use this when SHIELD should become part of the repo workflow.
 
-- the repo will be worked on seriously
-- you want `compile -> plan -> run -> verify -> retry`
-- you want task packets, metrics, and handoff artifacts
+Current rule:
 
-## Step 1: Clone The Target Repo
-
-```bash
-git clone <target-repo>
-cd <target-repo>
-git checkout -b shield-bootstrap
+```text
+SHIELD runtime should live at the target repo root.
 ```
 
-## Step 2: Copy SHIELD Core Into The Target Repo Root
+The current CLI treats the folder containing `run_orchestrator.py` as repo root.
 
-Copy these directories and files into the **root** of the target repo:
+## Files To Copy
 
-### Required
+Required:
 
 - `control_plane/`
 - `run_orchestrator.py`
 - `templates/`
 - `manifest.yaml`
-
-### Strongly recommended
-
-- `README.md`
+- `ONBOARDING.md`
+- `OPERATING_RULES.md`
 - `CHEATSHEET.md`
-- `GENERAL.md`
-- `SYSTEM_AUDIT.md`
 - `PROMPT_PACK.md`
+
+Recommended:
+
+- `CTO_PRODUCT_WORKFLOW.md`
+- `SYSTEM_AUDIT.md`
 - `tools/prompt-builder/`
-
-### Optional
-
 - `Skills/`
-- `STATUS.md`
 
-### Do not copy by default
+Do not copy by default:
 
 - `.skills_pool/`
 - `refs_github/`
-- `_agent/`
 - generated `runtime/`
 - generated `knowledge/compiled/`
 - generated `.hub/`
 
----
+## Ignore Rules
 
-## Step 3: Add Ignore Rules
-
-Add these to the target repo `.gitignore`:
+Add to the target repo `.gitignore`:
 
 ```gitignore
 runtime/state/
@@ -131,13 +93,7 @@ __pycache__/
 venv/
 ```
 
-These are generated or environment-specific artifacts.
-
----
-
-## Step 4: Install Minimal Dependencies
-
-The current SHIELD runtime needs Python plus `PyYAML`.
+## Install Minimal Dependency
 
 ```bash
 python -m venv .venv
@@ -145,205 +101,64 @@ python -m venv .venv
 pip install pyyaml
 ```
 
-Then install the normal dependencies of the target repo itself.
+Install the target repo's own dependencies separately.
 
-Examples:
+## Bootstrap Checklist
 
-- `pytest`
-- `ruff`
-- `mypy`
-- `npm install`
-- `eslint`
-
-Those depend on the target repo, not on SHIELD itself.
-
----
-
-## Step 5: Add Minimal Project Files
-
-### `DASHBOARD.md`
-
-Recommended minimal version:
-
-```md
-# DASHBOARD
-
-## TODO
-| Task | Title | Role |
-|------|-------|------|
-```
-
-The dashboard is optional, but having it makes project context easier to carry.
-
-### `manifest.yaml`
-
-Start small.
-
-Do not bring a huge role catalog into a fresh target repo on day one.
-
-Recommended initial roles:
-
-- backend
-- frontend
-- fullstack
-- qa
-- security or reviewer
-
----
-
-## Step 6: Compile
+1. Confirm target repo builds or at least has a known failure.
+2. Create or copy `DASHBOARD.md`.
+3. Trim `manifest.yaml` to the roles you will actually use.
+4. Run:
 
 ```bash
 python run_orchestrator.py compile
 ```
 
-This should generate:
-
-- `knowledge/compiled/role_index.json`
-- `knowledge/compiled/skill_index.json`
-- `knowledge/compiled/project_index.json`
-- `knowledge/compiled/module_index.json`
-- `runtime/cache/summaries/dashboard_snapshot.json`
-
-If compile does not pass, stop and fix bootstrap first.
-
----
-
-## Step 7: Run A Smoke Task
-
-Create a very small task first.
-
-Example:
-
-```yaml
-schema_version: "2.1"
-id: TASK-SMOKE-001
-title: Create proof file
-description: Validate SHIELD execution loop in this repository.
-assigned_role: backend
-priority: low
-status: queued
-domain: general
-
-inputs:
-  related_paths:
-    - README.md
-  related_tests: []
-  related_handoffs: []
-  related_logs: []
-  related_modules: []
-
-constraints:
-  - minimal_change_only
-
-acceptance_criteria:
-  - proof file exists
-
-metadata:
-  execution:
-    primary_commands:
-      - "New-Item -ItemType Directory -Force -Path 'runtime/sessions' | Out-Null"
-      - "Set-Content -Path 'runtime/sessions/proof.txt' -Value 'ok' -Encoding utf8"
-    output_files:
-      - runtime/sessions/proof.txt
-    satisfied_criteria:
-      - proof file exists
-```
-
-Then run:
+5. Create a small `leadership_brief`.
+6. Convert one approved task into `task.yaml`.
+7. Run:
 
 ```bash
 python run_orchestrator.py plan path/to/task.yaml
 python run_orchestrator.py run path/to/task.yaml
 ```
 
----
+Then run the serial audit once:
 
-## Step 8: Use SHIELD For Real Work
+```bash
+python run_orchestrator.py audit
+```
 
-Once the smoke task passes, move to a real small task.
+## Three Common Scenarios
 
-Good first tasks:
+### Zero Build
 
-- fix a typo or bad error message
-- add one missing test
-- tighten one validation rule
-- improve one small log or config issue
+1. Product defines problem and scope.
+2. CTO defines architecture and first slice.
+3. Workers implement one vertical slice.
+4. QA verifies.
 
-For each task:
+### Improve Existing Repo
 
-1. set `inputs.related_paths`
-2. write clear `acceptance_criteria`
-3. add `metadata.execution.primary_commands`
-4. run `plan`
-5. run `run`
-6. inspect reports
+1. Product defines improvement value.
+2. CTO checks architecture impact.
+3. Workers implement small scoped tasks.
+4. Reviewer/QA verifies.
 
----
+### Solve Issue
 
-## Step 9: Read The Right Outputs
-
-After a run, check:
-
-- `runtime/state/task_packets/`
-- `runtime/state/agent_runs/`
-- `runtime/state/verification_reports/`
-- `runtime/reports/metrics/`
-- `.hub/done/`
-- `.hub/handoffs/` when a task fails
-
----
-
-## Step 10: Roll Out Gradually
-
-Do not apply SHIELD to every workflow on day one.
-
-Recommended rollout:
-
-1. smoke task
-2. one real small task
-3. one retry scenario
-4. weekly or release-related tasks
-5. broader team adoption
-
----
+1. Product or QA clarifies impact and reproduction.
+2. CTO triages technical boundary if needed.
+3. Worker fixes the assigned task.
+4. QA verifies the original issue.
 
 ## Common Mistakes
 
 | Wrong | Right |
-|-------|-------|
-| Put SHIELD under a subfolder | Place SHIELD at repo root |
-| Embed full runtime before the repo even runs locally | First get the target repo running |
-| Use a huge manifest on day one | Start with a small manifest |
-| Skip `metadata.execution` | Always give runnable commands |
-| Treat SHIELD as magic auto-coding | Treat it as a disciplined control plane |
-| Roll out to every task immediately | Start with smoke tasks and small wins |
-
----
-
-## Recommended Decision Rule
-
-Use this shortcut:
-
-- If you are still understanding the repo: use **Prompt-only**
-- If you already know the repo and want repeatable execution: use **Full runtime**
-
----
-
-## Current Limitation
-
-SHIELD is not yet packaged as:
-
-```bash
-pip install shield
-```
-
-or:
-
-```bash
-python -m shield bootstrap <repo>
-```
-
-Right now, the practical model is:
-
-**vendor SHIELD into the target repo root and use it as an internal control plane**
+|---|---|
+| Embed runtime before the target repo runs | Make the repo runnable first |
+| Ask backend to figure out raw product scope | Product/CTO create tasks first |
+| Open many sessions without tasks | Open sessions only after task assignment |
+| Keep progress in chat only | Write session reports and handoffs |
+| Treat `run` as the whole process | Use `run` after leadership has created tasks |
+| Skip reports because command passed | Read session reports and quick reports after every run |

@@ -1,0 +1,20 @@
+{
+  "schema_version": "2.1-collab",
+  "task_id": "TASK-2026-001",
+  "decision": "Use structured session reports instead of compact free-form post-task summaries.",
+  "reason": "Later sessions need reusable progress artifacts without rescanning the entire repo or chat history.",
+  "impact": [
+    "Improves cross-session continuity.",
+    "Makes dashboard summaries more trustworthy.",
+    "Gives Product and CTO a stable audit trail."
+  ],
+  "decided_by": "cto",
+  "contributors": [
+    "product"
+  ],
+  "decided_at": "2026-04-12T15:20:00Z",
+  "related_artifacts": [
+    "templates/session_report.json",
+    "templates/handoff.json"
+  ]
+}

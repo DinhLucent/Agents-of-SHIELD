@@ -48,7 +48,7 @@ class RunSummarizer:
         verifications: list[dict[str, Any]] | None,
     ) -> str:
         if output.get("status") == "completed":
-            return "complete_and_handoff"
+            return output.get("next_action") or "complete_and_report"
         if output.get("status") == "failed":
             return "stop_and_escalate"
         if output.get("status") == "pending_primary_execution":
@@ -63,4 +63,4 @@ class RunSummarizer:
                 return "retry_with_failure_context"
         if runtime_plan and runtime_plan.get("review_required"):
             return "complete_review_and_handoff"
-        return "complete_and_handoff"
+        return output.get("next_action") or "complete_and_report"

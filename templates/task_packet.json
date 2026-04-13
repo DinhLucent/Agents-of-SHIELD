@@ -49,10 +49,58 @@
   "goal": "Tighten retry packet context selection for small control-plane tasks",
   "summary": "Small bugfix so retry packets add only targeted context after verification failures.",
   "rules": [
+    "Run role gate before work",
+    "If this packet role does not match task ownership, stop and hand off",
     "Prefer minimal patch",
     "Do not change unrelated modules",
-    "Update handoff after execution"
+    "Read latest handoff/report before editing",
+    "End with session_report or handoff"
   ],
+  "role_gate": {
+    "task_assigned_role": "backend",
+    "packet_role": "backend",
+    "allowed_to_execute": true,
+    "decision": "claim",
+    "on_mismatch": "Do not execute; create handoff or ask Product/CTO to reassign."
+  },
+  "context_check": {
+    "must_read_before_work": [
+      "DASHBOARD.md",
+      "OPERATING_RULES.md",
+      "ROLE_SKILL_MATRIX.md",
+      "task contract",
+      "latest relevant handoff or session report"
+    ],
+    "task_handoff_refs": [],
+    "packet_handoff_refs": [],
+    "rule": "If a done report already exists for this task, do not redo work without a new task or retry request."
+  },
+  "reporting_requirements": {
+    "required_exit_artifact": "session_report_or_handoff",
+    "session_report_required_fields": [
+      "task_id",
+      "session_id",
+      "role",
+      "role_gate",
+      "context_check",
+      "status",
+      "summary",
+      "changed_files",
+      "verification",
+      "blockers",
+      "handoff_needed",
+      "next_owner_role",
+      "next_step",
+      "artifacts"
+    ],
+    "handoff_required_when": [
+      "role_mismatch",
+      "scope_or_architecture_change",
+      "blocked_by_another_role",
+      "verification_failed_after_retry_budget",
+      "security_or_release_risk"
+    ]
+  },
   "context_budget": {
     "max_input_tokens": 12000,
     "max_code_tokens": 8000,

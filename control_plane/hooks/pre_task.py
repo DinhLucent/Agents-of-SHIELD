@@ -49,4 +49,6 @@ class PreTaskHook:
         snapshot_path = build_dashboard_snapshot(self.repo_root)
         snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
         current_path = self.cache_dir / "current_dashboard.json"
-        current_path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False), encoding="utf-8")
+        tmp_path = current_path.with_suffix(".json.tmp")
+        tmp_path.write_text(json.dumps(snapshot, indent=2, ensure_ascii=False), encoding="utf-8")
+        tmp_path.replace(current_path)

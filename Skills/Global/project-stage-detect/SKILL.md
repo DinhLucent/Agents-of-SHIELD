@@ -1,192 +1,88 @@
 ---
 name: project-stage-detect
-description: "Automatically analyze project state, detect stage, identify gaps, and recommend next steps based on existing artifacts."
-argument-hint: "[optional: role filter like 'programmer' or 'designer']"
+description: "Analyze an existing software project and classify whether SHIELD should run zero build, improve repo, solve issue, or assigned-task flow."
+argument-hint: "[optional: role filter]"
 user-invocable: true
-allowed-tools: Read, Glob, Grep, Bash
+allowed-tools: Read, Glob, Grep
 ---
 
-# Project Stage Detection
+# Project Stage Detect
 
-This skill scans your project to determine its current development stage, completeness
-of artifacts, and gaps that need attention. It's especially useful when:
-- Starting with an existing project
-- Onboarding to a codebase
-- Checking what's missing before a milestone
-- Understanding "where are we?"
+Use this skill when a session needs to understand where a project is before planning work.
 
----
+This is not a full architecture review.
+
+It is a fast stage and gap scan.
 
 ## Workflow
 
-### 1. Scan Key Directories
+### 1. Scan Minimal Project Signals
 
-Analyze project structure and content:
+Check for:
 
-**Design Documentation** (`design/`):
-- Count GDD files in `design/gdd/*.md`
-- Check for game-concept.md, game-pillars.md, systems-index.md
-- If systems-index.md exists, count total systems vs. designed systems
-- Analyze completeness (Overview, Detailed Design, Edge Cases, etc.)
-- Count narrative docs in `design/narrative/`
-- Count level designs in `design/levels/`
+- repo docs: `README.md`, `docs/`, `CHANGELOG.md`
+- app entrypoints: `src/`, `app/`, `services/`, `packages/`, `lib/`
+- test entrypoints: `tests/`, `test/`, `e2e/`, `playwright.config.*`
+- package files: `package.json`, `pyproject.toml`, `requirements.txt`, `go.mod`, `Cargo.toml`, `.csproj`
+- SHIELD artifacts: `ONBOARDING.md`, `DASHBOARD.md`, `manifest.yaml`, `ROLE_SKILL_MATRIX.md`, `.hub/`, `runtime/reports/`
+- issue context: failing logs, open task, handoff, verification report
 
-**Source Code** (`src/`):
-- Count source files (language-agnostic)
-- Identify major systems (directories with 5+ files)
-- Check for core/, gameplay/, ai/, networking/, ui/ directories
-- Estimate lines of code (rough scale)
+Do not scan the whole repo if the task already names the relevant files.
 
-**Production Artifacts** (`production/`):
-- Check for active sprint plans
-- Look for milestone definitions
-- Find roadmap documents
-
-**Prototypes** (`prototypes/`):
-- Count prototype directories
-- Check for READMEs (documented vs undocumented)
-- Assess if prototypes are archived or active
-
-**Architecture Docs** (`docs/architecture/`):
-- Count ADRs (Architecture Decision Records)
-- Check for overview/index documents
-
-**Tests** (`tests/`):
-- Count test files
-- Estimate test coverage (rough heuristic)
-
-### 2. Classify Project Stage
-
-Based on scanned artifacts, determine stage. Check `production/stage.txt` first —
-if it exists, use its value (explicit override from `/gate-check`). Otherwise,
-auto-detect using these heuristics (check from most-advanced backward):
+### 2. Classify Stage
 
 | Stage | Indicators |
-|-------|-----------|
-| **Concept** | No game concept doc, brainstorming phase |
-| **Systems Design** | Game concept exists, systems index missing or incomplete |
-| **Technical Setup** | Systems index exists, engine not configured |
-| **Pre-Production** | Engine configured, `src/` has <10 source files |
-| **Production** | `src/` has 10+ source files, active development |
-| **Polish** | Explicit only (set by `/gate-check` Production → Polish gate) |
-| **Release** | Explicit only (set by `/gate-check` Polish → Release gate) |
+|---|---|
+| `new idea` | no repo or only rough notes |
+| `repo intake` | code exists, goal still vague |
+| `planned improvement` | goal and target area exist, tasks not yet decomposed |
+| `assigned task` | task.yaml or handoff exists |
+| `active execution` | `.hub/active/` has current task state |
+| `verification/retry` | verification report, failed test, or handoff exists |
+| `maintenance` | change is small, bounded, and mostly regression-safe |
 
-### 3. Collaborative Gap Identification
+### 3. Recommend Role Path
 
-**DO NOT** just list missing files. Instead, **ask clarifying questions**:
+| Stage | Recommended path |
+|---|---|
+| `new idea` | Product -> CTO -> task slices |
+| `repo intake` | Product -> CTO -> first improvement task |
+| `planned improvement` | CTO or Producer -> worker role |
+| `assigned task` | assigned worker role |
+| `active execution` | current owner session or handoff target |
+| `verification/retry` | QA -> owning worker role |
+| `maintenance` | owning worker role -> QA |
 
-- "I see combat code (`src/gameplay/combat/`) but no `design/gdd/combat-system.md`. Was this prototyped first, or should we reverse-document?"
-- "You have 15 ADRs but no architecture overview. Should I create one to help new contributors?"
-- "No sprint plans in `production/`. Are you tracking work elsewhere (Jira, Trello, etc.)?"
-- "I found a game concept but no systems index. Have you decomposed the concept into individual systems yet, or should we run `/map-systems`?"
-- "Prototypes directory has 3 projects with no READMEs. Were these experiments, or do they need documentation?"
+### 4. Produce Stage Report
 
-### 4. Generate Stage Report
+Return:
 
-Use template: `.claude/docs/templates/project-stage-report.md`
-
-**Report structure**:
 ```markdown
-# Project Stage Analysis
+# Project Stage Report
 
-**Date**: [date]
-**Stage**: [Concept/Systems Design/Technical Setup/Pre-Production/Production/Polish/Release]
+## Stage
+[stage]
 
-## Completeness Overview
-- Design: [X%] ([N] docs, [gaps])
-- Code: [X%] ([N] files, [systems])
-- Architecture: [X%] ([N] ADRs, [gaps])
-- Production: [X%] ([status])
-- Tests: [X%] ([coverage estimate])
+## Evidence
+[files/artifacts checked]
 
-## Gaps Identified
-1. [Gap description + clarifying question]
-2. [Gap description + clarifying question]
+## Current SHIELD Artifacts
+[dashboard, active task, handoff, reports, task contract]
 
-## Recommended Next Steps
-[Priority-ordered list based on stage and role]
+## Gaps
+[only gaps that affect next action]
+
+## Recommended Next Role
+[role]
+
+## Next Step
+[smallest useful action]
 ```
 
-### 5. Role-Filtered Recommendations (Optional)
+### 5. Guardrails
 
-If user provided a role argument (e.g., `/project-stage-detect programmer`):
-
-**Programmer**:
-- Focus on architecture docs, test coverage, missing ADRs
-- Code-to-docs gaps
-
-**Designer**:
-- Focus on GDD completeness, missing design sections
-- Prototype documentation
-
-**Producer**:
-- Focus on sprint plans, milestone tracking, roadmap
-- Cross-team coordination docs
-
-**General** (no role):
-- Holistic view of all gaps
-- Highest-priority items across domains
-
-### 6. Request Approval Before Writing
-
-**Collaborative protocol**:
-```
-I've analyzed your project. Here's what I found:
-
-[Show summary]
-
-Gaps identified:
-1. [Gap 1 + question]
-2. [Gap 2 + question]
-
-Recommended next steps:
-- [Priority 1]
-- [Priority 2]
-- [Priority 3]
-
-May I write the full stage analysis to production/project-stage-report.md?
-```
-
-Wait for user approval before creating the file.
-
----
-
-## Example Usage
-
-```bash
-# General project analysis
-/project-stage-detect
-
-# Programmer-focused analysis
-/project-stage-detect programmer
-
-# Designer-focused analysis
-/project-stage-detect designer
-```
-
----
-
-## Follow-Up Actions
-
-After generating the report, suggest relevant next steps:
-
-- **Concept exists but no systems index?** → `/map-systems` to decompose into systems
-- **Missing design docs?** → `/reverse-document design src/[system]`
-- **Missing architecture docs?** → `/architecture-decision` or `/reverse-document architecture`
-- **Prototypes need documentation?** → `/reverse-document concept prototypes/[name]`
-- **No sprint plan?** → `/sprint-plan`
-- **Approaching milestone?** → `/milestone-review`
-
----
-
-## Collaborative Protocol
-
-This skill follows the collaborative design principle:
-
-1. **Question First**: Ask about gaps, don't assume
-2. **Present Options**: "Should I create X, or is it tracked elsewhere?"
-3. **User Decides**: Wait for direction
-4. **Show Draft**: Display report summary
-5. **Get Approval**: "May I write to production/project-stage-report.md?"
-
-**Never** silently write files. **Always** show findings and ask before creating artifacts.
+- Prefer structured SHIELD artifacts over chat memory.
+- If raw intent is vague, route to Product first.
+- If technical boundary is unclear, route to CTO.
+- If verification failed, route to QA or the owning worker role with a handoff.
+- Do not write files unless the user explicitly asks.

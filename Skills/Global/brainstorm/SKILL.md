@@ -187,10 +187,10 @@ Ground the concept in reality:
 
 ---
 
-4. **Generate the product concept document** using the template at
-   `.claude/docs/templates/product-concept.md`. Fill in ALL sections from the
-   brainstorm conversation, including the user motivation analysis, value proposition,
-   and flow design sections.
+4. **Generate the product concept output** using `templates/leadership_brief.json`
+   as the SHIELD handoff shape. If a longer concept document is useful, write it
+   to `design/docs/product-concept.md`. Fill in the user motivation analysis,
+   value proposition, and flow design sections from the brainstorm conversation.
 
 5. **Save to** `design/docs/product-concept.md`, creating directories as needed.
 
