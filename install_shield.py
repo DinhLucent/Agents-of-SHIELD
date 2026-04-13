@@ -21,7 +21,7 @@ def install():
     print(f"Installing SHIELD V2 Control Plane to {target} ...\n")
 
     # 1. Copy exact directories
-    dirs_to_copy = ["control_plane", "tools", "templates"]
+    dirs_to_copy = ["control_plane", "tools", "templates", "Skills"]
     for d in dirs_to_copy:
         src_d = source / d
         dst_d = target / d
@@ -39,6 +39,9 @@ def install():
         "OPERATING_RULES.md", 
         "ROLE_SKILL_MATRIX.md", 
         "CTO_PRODUCT_WORKFLOW.md",
+        "CHEATSHEET.md",
+        "GUIDE_FIRSTGUY.md",
+        "BOOTSTRAP_SHIELD.md",
         "manifest.yaml", 
         "run_orchestrator.py",
     ]
