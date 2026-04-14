@@ -50,3 +50,4 @@ runtime/reports/
 # Control Plane - Compiled knowledge (regenerable via `python run_orchestrator.py compile`)
 knowledge/compiled/
 knowledge/memory/
+demo_zero_build
