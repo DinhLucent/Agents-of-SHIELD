@@ -88,6 +88,7 @@ def cmd_audit(repo_root: Path) -> None:
         ("run", repo_root / "tests" / "fixtures" / "audit" / "role_gate_mismatch.yaml", "failed"),
         ("run", repo_root / "tests" / "fixtures" / "audit" / "security_blocked.yaml", "failed"),
         ("run", repo_root / "tests" / "fixtures" / "audit" / "workspace_blocked.yaml", "failed"),
+        ("run", repo_root / "tests" / "fixtures" / "audit" / "destructive_traversal.yaml", "failed"),
     ]
     results = []
     failures = []
@@ -114,7 +115,7 @@ def cmd_audit(repo_root: Path) -> None:
             failures.append("hard_fail.yaml: expected a handoff artifact")
         if task_path.name == "role_gate_mismatch.yaml":
             failures.extend(_validate_role_gate_mismatch(repo_root, task, result, handoff_path))
-        if task_path.name in {"security_blocked.yaml", "workspace_blocked.yaml"}:
+        if task_path.name in {"security_blocked.yaml", "workspace_blocked.yaml", "destructive_traversal.yaml"}:
             failures.extend(_validate_security_blocked(repo_root, task, result, handoff_path))
         if handoff_path:
             failures.extend(_validate_handoff_artifact(Path(handoff_path), task_path.name))
@@ -149,6 +150,7 @@ def cmd_audit(repo_root: Path) -> None:
             "role_gate_mismatch",
             "security_blocked",
             "workspace_blocked",
+            "destructive_traversal",
         ],
         "results": results,
     })

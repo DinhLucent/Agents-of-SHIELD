@@ -540,6 +540,10 @@ class AgentExecutor:
             return True, reason
 
         lowered = command.strip()
+        destructive_reason = self._blocked_destructive_path(lowered)
+        if destructive_reason:
+            return True, destructive_reason
+
         danger_patterns = [
             (r"(?i)\brm\s+-rf\s+/", "Dangerous recursive delete"),
             (r"(?i)\brm\s+-rf\s+\*", "Dangerous recursive delete"),
@@ -578,6 +582,36 @@ class AgentExecutor:
             except ValueError:
                 return True, f"Workspace boundary blocked command: cd to {target}"
         return False, ""
+
+    def _blocked_destructive_path(self, command: str) -> str:
+        if not re.search(r"(?i)\b(rm|del|erase|remove-item|rmdir|rd)\b", command):
+            return ""
+
+        if re.search(r"(?i)(\.\.[/\\])", command):
+            return "Destructive command targets parent traversal"
+
+        for match in re.finditer(r"(?i)([a-z]:\\[^'\"\s]+)", command):
+            reason = self._block_if_outside_repo(match.group(1))
+            if reason:
+                return reason
+
+        for match in re.finditer(r"(?i)(/[^'\"\s]+)", command):
+            reason = self._block_if_outside_repo(match.group(1))
+            if reason:
+                return reason
+
+        return ""
+
+    def _block_if_outside_repo(self, raw_path: str) -> str:
+        try:
+            candidate = Path(raw_path).resolve()
+        except (OSError, RuntimeError):
+            return "Destructive command targets invalid path"
+        try:
+            candidate.relative_to(self.repo_root.resolve())
+        except ValueError:
+            return f"Destructive command targets path outside repo_root: {candidate}"
+        return ""
 
     def _record_command_audit(
         self,

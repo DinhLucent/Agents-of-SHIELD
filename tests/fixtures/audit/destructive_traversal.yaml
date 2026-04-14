@@ -1,0 +1,14 @@
+schema_version: "2.1"
+id: task-audit-destructive-traversal
+title: Audit destructive traversal block
+summary: Ensure destructive commands that traverse parent paths are blocked
+description: Verify security policy stops destructive parent-path traversal before execution
+task_type: feature
+assigned_role: backend
+execution_mode: solo
+metadata:
+  execution:
+    primary_commands:
+      - Remove-Item -Recurse -Force ..\..\temp
+expected_outputs:
+  - report
