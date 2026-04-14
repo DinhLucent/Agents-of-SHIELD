@@ -12,7 +12,7 @@ Keep this file short. Detailed history belongs in reports and handoffs.
 | Operating model | Product + CTO first, workers by assigned task |
 | Current phase | Collaboration workflow + sandbox validation |
 | Primary workflow | `User -> Product + CTO -> Task -> Worker -> QA/Reviewer -> Dashboard` |
-| Last updated | 2026-04-13 |
+| Last updated | 2026-04-14 |
 
 ## CEO / Operator Check
 
