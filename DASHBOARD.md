@@ -14,6 +14,28 @@ Keep this file short. Detailed history belongs in reports and handoffs.
 | Primary workflow | `User -> Product + CTO -> Task -> Worker -> QA/Reviewer -> Dashboard` |
 | Last updated | 2026-04-14 |
 
+## Quick Context
+
+- Latest system check: run `python run_orchestrator.py dashboard` for live counts.
+- Current priority: maintain Product/CTO-first workflow with verified execution loops.
+- If unsure: open `STATUS.md` for current backlog and known limits.
+
+## Task Stats (Live)
+
+The live counts come from `.hub/` and `runtime/reports/`.
+
+```bash
+python run_orchestrator.py dashboard
+```
+
+Expected fields:
+
+- active tasks
+- blocked tasks
+- recent done
+- recent handoffs
+- recent session reports
+
 ## CEO / Operator Check
 
 Use this for the live artifact view:
